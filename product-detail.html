@@ -8,26 +8,222 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        brand: {
-                            '50': '#f0f9ff', '100': '#e0f2fe', '200': '#bae6fd', '300': '#7dd3fc',
-                            '400': '#38bdf8', '500': '#0ea5e9', '600': '#0284c7', '700': '#0369a1',
-                            '800': '#075985', '900': '#0c4a6e', '950': '#082f49',
-                        }
-                    }
-                }
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        
+        .model-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        #model-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        .content-overlay {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+        }
+        
+        .hero-section {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 20;
+        }
+        
+        .feature-section {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            z-index: 20;
+            padding: 0 5%;
+        }
+        
+        .feature-content {
+            max-width: 600px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Section indicators */
+        .section-indicator {
+            position: fixed;
+            right: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .indicator-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .indicator-dot.active {
+            background: white;
+            transform: scale(1.3);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+        
+        .indicator-dot::after {
+            content: attr(data-label);
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            white-space: nowrap;
+            font-size: 12px;
+            color: white;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            font-weight: 500;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .indicator-dot:hover::after {
+            opacity: 1;
+        }
+        
+        /* Loader */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+            transition: opacity 0.5s ease;
+        }
+        
+        .progress {
+            width: 200px;
+            height: 4px;
+            background: #333;
+            margin-top: 20px;
+            overflow: hidden;
+            border-radius: 2px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+            width: 0%;
+            transition: width 0.3s;
+            border-radius: 2px;
+        }
+        
+        .demo-notice {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: 100;
+            display: none;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Animation classes */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+        
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+            .feature-section {
+                padding: 0 20px;
+                justify-content: center;
+            }
+            
+            .feature-content {
+                padding: 30px;
+                margin: 0 20px;
+            }
+            
+            .section-indicator {
+                right: 20px;
+            }
+            
+            .indicator-dot::after {
+                display: none;
             }
         }
-    </script>
+    </style>
 </head>
-<body class="bg-white text-gray-900">
+<body class="text-gray-900">
+    <!-- Loader -->
+    <div id="loader">
+        <div class="text-center">
+            <h3 class="text-xl font-semibold mb-4">Loading AxonaPulse Experience...</h3>
+            <div class="progress">
+                <div class="progress-bar"></div>
+            </div>
+            <div id="loader-error" class="mt-4 text-gray-400 text-sm"></div>
+        </div>
+    </div>
+    
+    <!-- Demo Notice -->
+    <div class="demo-notice" id="demo-notice">
+        Interactive 3D Experience
+    </div>
+    
+    <!-- 3D Model Container -->
+    <div class="model-container">
+        <canvas id="model-canvas"></canvas>
+    </div>
 
+    <!-- Section Indicators -->
+    <div class="section-indicator">
+        <div class="indicator-dot active" data-label="Welcome" data-section="hero"></div>
+        <div class="indicator-dot" data-label="Dual-Action Therapy" data-section="feature1"></div>
+        <div class="indicator-dot" data-label="Smart Integration" data-section="feature2"></div>
+        <div class="indicator-dot" data-label="Premium Design" data-section="feature3"></div>
+        <div class="indicator-dot" data-label="Specifications" data-section="feature4"></div>
+    </div>
+
+    <!-- Header (Original with slight modification) -->
     <header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-lg border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
@@ -37,6 +233,7 @@
                 <nav class="hidden md:flex md:space-x-10">
                     <a href="index.html" class="nav-item text-gray-500 hover:text-gray-900 font-medium" data-page="index">Products</a>
                     <a href="about.html" class="nav-item text-gray-500 hover:text-gray-900 font-medium" data-page="about">About Us</a>
+                    <a href="product-detail.html" class="nav-item text-gray-500 hover:text-gray-900 font-medium font-semibold text-brand-600" data-page="product">AxonaPulse</a>
                 </nav>
                 <div class="flex md:hidden">
                     <button id="mobile-menu-btn" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-500">
@@ -51,87 +248,132 @@
             <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
                 <a href="index.html" class="nav-item block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50" data-page="index">Products</a>
                 <a href="about.html" class="nav-item block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50" data-page="about">About Us</a>
+                <a href="product-detail.html" class="nav-item block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 font-semibold text-brand-600" data-page="product">AxonaPulse</a>
             </div>
         </div>
     </header>
 
-    <main>
-        <div class="bg-black text-white text-center py-24 sm:py-32">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <p class="animate-on-scroll text-lg font-semibold text-brand-400">AxonaPulse</p>
-                <h1 class="animate-on-scroll delay-100 mt-4 text-5xl sm:text-7xl font-bold tracking-tight">
+    <!-- Main Content -->
+    <main class="content-overlay">
+        <!-- Hero Section -->
+        <section class="hero-section" id="hero-section">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <p class="text-lg font-semibold text-brand-400 mb-4 animate-on-scroll">AxonaPulse</p>
+                <h1 class="text-5xl sm:text-7xl font-bold tracking-tight text-white mb-6 animate-on-scroll" style="text-shadow: 0 4px 12px rgba(0,0,0,0.3);">
                     Intelligent, targeted relief.
                 </h1>
-                <p class="animate-on-scroll delay-200 mt-6 text-xl sm:text-2xl max-w-3xl mx-auto text-gray-300">
+                <p class="text-xl sm:text-2xl max-w-3xl mx-auto text-gray-200 mb-12 animate-on-scroll" style="text-shadow: 0 2px 8px rgba(0,0,0,0.3);">
                     The first smart neckwear to combine therapeutic Infrared heat with targeted electroimpulse stimulation.
                 </p>
-                <div class="animate-on-scroll delay-300 mt-16">
-                    <img src="https://placehold.co/1200x600/111827/ffffff?text=AxonaPulse+Device+Render" 
-                         alt="High-resolution render of AxonaPulse neckwear"
-                         class="w-full max-w-5xl mx-auto rounded-2xl shadow-2xl">
+                <div class="animate-on-scroll">
+                    <button class="bg-white text-gray-900 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gray-100 transition-all duration-300 shadow-2xl hover:shadow-3xl transform hover:-translate-y-1">
+                        Experience Innovation
+                    </button>
                 </div>
             </div>
-        </div>
-        
-        <div class="py-24 sm:py-32">
-            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-24">
-                
-                <div class="animate-on-scroll grid grid-cols-1 md:grid-cols-2 gap-12 sm:gap-16 items-center">
-                    <div>
-                        <img src="https://placehold.co/600x600/e0f2fe/0c4a6e?text=Feature+1:+IR+Heat" 
-                             alt="Diagram of Infrared heat penetrating tissue"
-                             class="w-full rounded-2xl shadow-xl">
-                    </div>
-                    <div class="text-lg">
-                        <h2 class="text-4xl font-bold tracking-tight mb-4">Dual-Action Therapy</h2>
-                        <p class="text-gray-700 leading-relaxed">
-                            AxonaPulse combines two proven technologies. First, deep-penetrating <strong>Infrared (IR) heat</strong> warms muscles to increase blood flow and release tension.
-                        </p>
-                        <p class="mt-4 text-gray-700 leading-relaxed">
-                            Simultaneously, gentle <strong>electroimpulse stimulation</strong> targets specific nerves to block pain signals and trigger the release of endorphins, your body's natural painkillers.
-                        </p>
-                    </div>
+        </section>
+
+        <!-- Feature 1: Dual-Action Therapy -->
+        <section class="feature-section" id="feature1-section">
+            <div class="feature-content animate-on-scroll">
+                <span class="inline-block px-4 py-1 bg-brand-100 text-brand-700 rounded-full text-sm font-semibold mb-4">Core Technology</span>
+                <h2 class="text-4xl font-bold tracking-tight mb-4 text-gray-900">Dual-Action Therapy</h2>
+                <p class="text-gray-700 leading-relaxed mb-6">
+                    AxonaPulse combines two proven technologies. First, deep-penetrating <strong class="text-brand-600">Infrared (IR) heat</strong> warms muscles to increase blood flow and release tension.
+                </p>
+                <p class="text-gray-700 leading-relaxed mb-6">
+                    Simultaneously, gentle <strong class="text-brand-600">electroimpulse stimulation</strong> targets specific nerves to block pain signals and trigger the release of endorphins, your body's natural painkillers.
+                </p>
+                <div class="flex items-center mt-8">
+                    <div class="w-3 h-3 bg-brand-500 rounded-full mr-3"></div>
+                    <span class="text-gray-600">Real-time muscle tension monitoring</span>
                 </div>
-                
-                <div class="animate-on-scroll grid grid-cols-1 md:grid-cols-2 gap-12 sm:gap-16 items-center">
-                    <div class="md:order-2">
-                        <img src="https://placehold.co/600x600/e0f2fe/0c4a6e?text=Feature+2:+App+Interface" 
-                             alt="Screenshot of the Axona mobile app"
-                             class="w-full rounded-2xl shadow-xl">
-                    </div>
-                    <div class="text-lg md:order-1">
-                        <h2 class="text-4xl font-bold tracking-tight mb-4">Smart. Simple. Connected.</h2>
-                        <p class="text-gray-700 leading-relaxed">
-                            Integrated biosensors monitor muscle tension and adapt the therapy in real-time.
-                        </p>
-                        <p class="mt-4 text-gray-700 leading-relaxed">
-                            Connect to the <strong>Axona App</strong> to customize your session, track your progress over time, and receive personalized wellness guidance. It's your personal therapist, on demand.
-                        </p>
-                    </div>
+                <div class="flex items-center mt-3">
+                    <div class="w-3 h-3 bg-brand-500 rounded-full mr-3"></div>
+                    <span class="text-gray-600">Adaptive therapy adjustment</span>
                 </div>
-                
-                <div class="animate-on-scroll grid grid-cols-1 md:grid-cols-2 gap-12 sm:gap-16 items-center">
-                    <div>
-                        <img src="https://placehold.co/600x600/e0f2fe/0c4a6e?text=Feature+3:+Premium+Design" 
-                             alt="Lifestyle image of person wearing AxonaPulse"
-                             class="w-full rounded-2xl shadow-xl">
-                    </div>
-                    <div class="text-lg">
-                        <h2 class="text-4xl font-bold tracking-tight mb-4">Designed for your life.</h2>
-                        <p class="text-gray-700 leading-relaxed">
-                            Made from medical-grade, hypoallergenic silicone, AxonaPulse is lightweight, flexible, and discreet.
-                        </p>
-                        <p class="mt-4 text-gray-700 leading-relaxed">
-                            Its minimalist design fits seamlessly under your collar, while the 3-day battery life means it's always ready when you are. Wear it at the office, at home, or while traveling.
-                        </p>
-                    </div>
-                </div>
-                
             </div>
-        </div>
+        </section>
+
+        <!-- Feature 2: Smart Integration -->
+        <section class="feature-section" id="feature2-section">
+            <div class="feature-content ml-auto animate-on-scroll">
+                <span class="inline-block px-4 py-1 bg-brand-100 text-brand-700 rounded-full text-sm font-semibold mb-4">Smart Technology</span>
+                <h2 class="text-4xl font-bold tracking-tight mb-4 text-gray-900">Smart. Simple. Connected.</h2>
+                <p class="text-gray-700 leading-relaxed mb-6">
+                    Integrated biosensors monitor muscle tension and adapt the therapy in real-time for optimal relief.
+                </p>
+                <p class="text-gray-700 leading-relaxed mb-6">
+                    Connect to the <strong class="text-brand-600">Axona App</strong> to customize your session, track your progress over time, and receive personalized wellness guidance. It's your personal therapist, on demand.
+                </p>
+                <div class="bg-gradient-to-r from-brand-500 to-brand-600 text-white p-6 rounded-xl mt-8">
+                    <h3 class="font-bold text-lg mb-2">App Features</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Personalized therapy programs</li>
+                        <li>Progress tracking & analytics</li>
+                        <li>Wellness recommendations</li>
+                        <li>Sleep optimization</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feature 3: Premium Design -->
+        <section class="feature-section" id="feature3-section">
+            <div class="feature-content animate-on-scroll">
+                <span class="inline-block px-4 py-1 bg-brand-100 text-brand-700 rounded-full text-sm font-semibold mb-4">Design Excellence</span>
+                <h2 class="text-4xl font-bold tracking-tight mb-4 text-gray-900">Designed for your life.</h2>
+                <p class="text-gray-700 leading-relaxed mb-6">
+                    Made from medical-grade, hypoallergenic silicone, AxonaPulse is lightweight, flexible, and discreet. Experience comfort without compromise.
+                </p>
+                <p class="text-gray-700 leading-relaxed mb-8">
+                    Its minimalist design fits seamlessly under your collar, while the 3-day battery life means it's always ready when you are. Wear it at the office, at home, or while traveling.
+                </p>
+                <div class="grid grid-cols-2 gap-6 mt-8">
+                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                        <div class="text-2xl font-bold text-brand-600">72h</div>
+                        <div class="text-gray-600 text-sm">Battery Life</div>
+                    </div>
+                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                        <div class="text-2xl font-bold text-brand-600">280g</div>
+                        <div class="text-gray-600 text-sm">Weight</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feature 4: Specifications -->
+        <section class="feature-section" id="feature4-section">
+            <div class="feature-content ml-auto animate-on-scroll">
+                <span class="inline-block px-4 py-1 bg-brand-100 text-brand-700 rounded-full text-sm font-semibold mb-4">Technical Specs</span>
+                <h2 class="text-4xl font-bold tracking-tight mb-6 text-gray-900">Precision Engineering</h2>
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Infrared Therapy</h3>
+                        <p class="text-gray-600">Dual-band IR heating (850nm & 940nm) with temperature control (35-45°C)</p>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Electroimpulse</h3>
+                        <p class="text-gray-600">Micro-current stimulation (0-50mA) with 8 intensity levels</p>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Sensors</h3>
+                        <p class="text-gray-600">EMG muscle sensors, temperature sensors, and motion detection</p>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Connectivity</h3>
+                        <p class="text-gray-600">Bluetooth 5.2, USB-C fast charging, wireless updates</p>
+                    </div>
+                </div>
+                <button class="w-full mt-10 bg-brand-600 text-white py-4 rounded-xl font-semibold text-lg hover:bg-brand-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                    Order Now – $349
+                </button>
+            </div>
+        </section>
     </main>
 
-    <footer class="bg-gray-900 text-gray-300 border-t border-gray-700">
+    <!-- Footer (Original) -->
+    <footer class="bg-gray-900 text-gray-300 border-t border-gray-700 relative z-30">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-12">
                 <div class="md:col-span-1">
@@ -167,6 +409,536 @@
             </div>
         </div>
     </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/draco/draco_decoder.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    
+    <!-- Main JS -->
+    <script>
+        // Extended main.js functionality for product page
+        window.addEventListener('load', function() {
+            console.log('Product page loaded, initializing 3D viewer...');
+            
+            // Initialize 3D viewer with your local model
+            initProductViewer();
+            
+            // Setup custom scroll animations for this page
+            setupProductScrollAnimations();
+            
+            // Initialize mobile menu
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const iconOpen = document.getElementById('icon-open');
+            const iconClose = document.getElementById('icon-close');
+            
+            if (mobileMenuBtn && mobileMenu) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                    iconOpen.classList.toggle('hidden');
+                    iconClose.classList.toggle('hidden');
+                });
+            }
+        });
+
+        // Custom 3D viewer for product page
+        function initProductViewer() {
+            console.log('Initializing product 3D viewer...');
+            
+            // Check if Three.js is available
+            if (typeof THREE === 'undefined') {
+                console.error('Three.js not loaded');
+                hideLoader();
+                return;
+            }
+            
+            // Setup scene
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x000000);
+            
+            // Setup camera
+            const camera = new THREE.PerspectiveCamera(
+                45,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.z = 5;
+            camera.position.y = 2;
+            
+            // Setup renderer
+            const canvas = document.getElementById('model-canvas');
+            if (!canvas) {
+                console.error('Canvas element not found');
+                return;
+            }
+            
+            const renderer = new THREE.WebGLRenderer({
+                canvas: canvas,
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+            
+            // Add lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 7);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+            
+            // Try to load your local model
+            let model = null;
+            let isModelLoaded = false;
+            
+            // Create loader
+            const loader = new THREE.GLTFLoader();
+            
+            // Set up Draco loader if available
+            if (typeof THREE.DRACOLoader !== 'undefined') {
+                try {
+                    const dracoLoader = new THREE.DRACOLoader();
+                    dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/draco/');
+                    loader.setDRACOLoader(dracoLoader);
+                    console.log('✅ Draco loader configured');
+                } catch (dracoError) {
+                    console.warn('Could not configure Draco loader:', dracoError);
+                }
+            }
+            
+            // Load your local model
+            console.log('Loading local model: models/product/product.glb');
+            loader.load(
+                'models/product/product.glb', // Your local model path
+                function(gltf) {
+                    console.log('✅ Local model loaded successfully!');
+                    model = gltf.scene;
+                    
+                    // Scale the model appropriately
+                    const box = new THREE.Box3().setFromObject(model);
+                    const size = new THREE.Vector3();
+                    box.getSize(size);
+                    const maxDimension = Math.max(size.x, size.y, size.z);
+                    
+                    // Scale to reasonable size
+                    const scaleFactor = 5 / maxDimension;
+                    model.scale.setScalar(scaleFactor * 0.8);
+                    
+                    // Center the model
+                    box.setFromObject(model);
+                    const center = new THREE.Vector3();
+                    box.getCenter(center);
+                    model.position.x = -center.x;
+                    model.position.y = -center.y;
+                    model.position.z = -center.z;
+                    
+                    // Setup materials
+                    model.traverse(function(child) {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                            
+                            if (child.material) {
+                                // Enhance materials for better appearance
+                                child.material.needsUpdate = true;
+                                
+                                // Add some metallic sheen if not present
+                                if (child.material.type === 'MeshStandardMaterial' || 
+                                    child.material.type === 'MeshPhysicalMaterial') {
+                                    child.material.metalness = 0.8;
+                                    child.material.roughness = 0.2;
+                                    child.material.envMapIntensity = 1.0;
+                                }
+                            }
+                        }
+                    });
+                    
+                    scene.add(model);
+                    isModelLoaded = true;
+                    
+                    // Hide loader
+                    hideLoader();
+                    
+                    // Show success notice
+                    showDemoNotice('✅ AxonaPulse 3D Model Loaded');
+                    
+                    console.log('Model loaded and ready');
+                },
+                function(xhr) {
+                    // Loading progress
+                    const percent = (xhr.loaded / (xhr.total || 10000000)) * 100;
+                    updateProgressBar(Math.min(percent, 100));
+                    updateLoaderMessage(`Loading 3D Model: ${Math.round(percent)}%`);
+                },
+                function(error) {
+                    console.error('❌ Failed to load local model:', error);
+                    updateLoaderMessage('Local model not found. Creating demonstration model...');
+                    
+                    // Create fallback model
+                    createFallbackModel(scene);
+                    isModelLoaded = true;
+                    hideLoader();
+                    showDemoNotice('Using demonstration model');
+                }
+            );
+            
+            // Fallback model creation
+            function createFallbackModel(scene) {
+                console.log('Creating fallback demonstration model...');
+                
+                const group = new THREE.Group();
+                
+                // Create a neckwear-like shape
+                const mainGeometry = new THREE.TorusGeometry(1.5, 0.3, 16, 100);
+                const mainMaterial = new THREE.MeshPhysicalMaterial({
+                    color: 0x0ea5e9,
+                    metalness: 0.9,
+                    roughness: 0.1,
+                    clearcoat: 1,
+                    clearcoatRoughness: 0.05
+                });
+                const mainRing = new THREE.Mesh(mainGeometry, mainMaterial);
+                
+                // Add inner padding
+                const paddingGeometry = new THREE.TorusGeometry(1.2, 0.2, 16, 100);
+                const paddingMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x1e293b,
+                    roughness: 0.8,
+                    metalness: 0.1
+                });
+                const padding = new THREE.Mesh(paddingGeometry, paddingMaterial);
+                
+                // Add control unit
+                const controlGeometry = new THREE.BoxGeometry(0.8, 0.4, 0.2);
+                const controlMaterial = new THREE.MeshPhysicalMaterial({
+                    color: 0x334155,
+                    metalness: 0.95,
+                    roughness: 0.05
+                });
+                const controlUnit = new THREE.Mesh(controlGeometry, controlMaterial);
+                controlUnit.position.set(0, 1.8, 0.3);
+                
+                // Add lights/indicators
+                const lightGeometry = new THREE.SphereGeometry(0.05, 16, 16);
+                const lightMaterial = new THREE.MeshBasicMaterial({ color: 0x10b981 });
+                
+                for (let i = 0; i < 8; i++) {
+                    const angle = (i / 8) * Math.PI * 2;
+                    const light = new THREE.Mesh(lightGeometry, lightMaterial);
+                    light.position.set(
+                        Math.cos(angle) * 1.5,
+                        Math.sin(angle) * 0.3,
+                        0.35
+                    );
+                    group.add(light);
+                }
+                
+                group.add(mainRing);
+                group.add(padding);
+                group.add(controlUnit);
+                model = group;
+                scene.add(model);
+                
+                // Scale appropriately
+                model.scale.setScalar(0.8);
+            }
+            
+            // Handle window resize
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+            window.addEventListener('resize', onWindowResize);
+            
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                // Rotate model slowly
+                if (model && isModelLoaded) {
+                    model.rotation.y += 0.002;
+                    
+                    // Add subtle floating motion
+                    model.position.y = Math.sin(Date.now() * 0.001) * 0.05;
+                }
+                
+                renderer.render(scene, camera);
+            }
+            animate();
+            
+            // Store references globally for scroll effects
+            window.scene = scene;
+            window.camera = camera;
+            window.model = model;
+            window.isModelLoaded = isModelLoaded;
+        }
+
+        // UI Helper functions
+        function updateLoaderMessage(message) {
+            const loader = document.getElementById('loader');
+            if (loader) {
+                const h3 = loader.querySelector('h3');
+                if (h3) {
+                    h3.textContent = message;
+                }
+            }
+        }
+
+        function updateProgressBar(percent) {
+            const progressBar = document.querySelector('.progress-bar');
+            if (progressBar) {
+                progressBar.style.width = `${percent}%`;
+            }
+        }
+
+        function hideLoader() {
+            const loader = document.getElementById('loader');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                }, 500);
+            }
+        }
+
+        function showDemoNotice(message) {
+            const demoNotice = document.getElementById('demo-notice');
+            if (demoNotice) {
+                demoNotice.textContent = message;
+                demoNotice.style.display = 'block';
+                
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    demoNotice.style.opacity = '0.5';
+                    
+                    // Fade out completely after another 3 seconds
+                    setTimeout(() => {
+                        demoNotice.style.display = 'none';
+                    }, 3000);
+                }, 5000);
+            }
+        }
+
+        // Enhanced scroll effects for product page
+        function setupProductScrollAnimations() {
+            // Animation for feature content
+            const observerOptions = {
+                threshold: 0.2,
+                rootMargin: '0px 0px -100px 0px'
+            };
+
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        
+                        // Trigger 3D effect when section comes into view
+                        const sectionId = entry.target.closest('section')?.id;
+                        if (sectionId) {
+                            triggerSectionEffect(sectionId);
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            // Observe all animate-on-scroll elements
+            document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                observer.observe(el);
+            });
+
+            // Setup section indicator
+            const sections = ['hero-section', 'feature1-section', 'feature2-section', 'feature3-section', 'feature4-section'];
+            const indicators = document.querySelectorAll('.indicator-dot');
+            
+            // Scroll to section when indicator is clicked
+            indicators.forEach((indicator, index) => {
+                indicator.addEventListener('click', () => {
+                    const section = document.getElementById(sections[index]);
+                    if (section) {
+                        section.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+
+            // Update active indicator on scroll
+            window.addEventListener('scroll', () => {
+                let currentSection = '';
+                
+                sections.forEach(sectionId => {
+                    const section = document.getElementById(sectionId);
+                    if (section) {
+                        const rect = section.getBoundingClientRect();
+                        if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
+                            currentSection = sectionId;
+                        }
+                    }
+                });
+                
+                indicators.forEach(indicator => {
+                    const section = indicator.getAttribute('data-section');
+                    if (currentSection.includes(section)) {
+                        indicator.classList.add('active');
+                    } else {
+                        indicator.classList.remove('active');
+                    }
+                });
+                
+                // Enhanced 3D background effects based on scroll
+                update3DBackground();
+            });
+
+            // Initialize GSAP scroll animations for 3D model
+            if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+                setup3DScrollAnimations();
+            }
+        }
+
+        function setup3DScrollAnimations() {
+            if (!window.model || !window.scene || !window.camera) return;
+            
+            // Create timeline for scroll animations
+            const tl = gsap.timeline({
+                scrollTrigger: {
+                    trigger: '.content-overlay',
+                    start: 'top top',
+                    end: 'bottom bottom',
+                    scrub: 1,
+                    onUpdate: (self) => {
+                        const progress = self.progress;
+                        
+                        // Model position animation (left to right and back)
+                        const xPos = Math.sin(progress * Math.PI * 2) * 2;
+                        window.model.position.x = xPos;
+                        
+                        // Section-based color changes
+                        const sectionProgress = progress * 5; // 5 sections
+                        const colors = [
+                            0x0ea5e9, // Blue (brand color) - Hero
+                            0xef4444, // Red - Therapy
+                            0x10b981, // Green - Smart tech
+                            0x8b5cf6, // Purple - Design
+                            0xf59e0b  // Amber - Specs
+                        ];
+                        
+                        const currentColorIndex = Math.floor(sectionProgress);
+                        const nextColorIndex = (currentColorIndex + 1) % colors.length;
+                        const colorProgress = sectionProgress - currentColorIndex;
+                        
+                        // Interpolate between colors
+                        const currentColor = colors[currentColorIndex];
+                        const nextColor = colors[nextColorIndex];
+                        
+                        // Convert hex to RGB
+                        const r1 = (currentColor >> 16) & 255;
+                        const g1 = (currentColor >> 8) & 255;
+                        const b1 = currentColor & 255;
+                        
+                        const r2 = (nextColor >> 16) & 255;
+                        const g2 = (nextColor >> 8) & 255;
+                        const b2 = nextColor & 255;
+                        
+                        const r = Math.round(r1 + (r2 - r1) * colorProgress);
+                        const g = Math.round(g1 + (g2 - g1) * colorProgress);
+                        const b = Math.round(b1 + (b2 - b1) * colorProgress);
+                        
+                        const interpolatedColor = (r << 16) | (g << 8) | b;
+                        
+                        // Update ambient light color
+                        window.scene.children.forEach(child => {
+                            if (child.isLight && child.type === 'AmbientLight') {
+                                gsap.to(child.color, {
+                                    r: r / 255,
+                                    g: g / 255,
+                                    b: b / 255,
+                                    duration: 0.5
+                                });
+                            }
+                        });
+                        
+                        // Model scale animation
+                        const scale = 0.8 + Math.sin(progress * Math.PI * 4) * 0.1;
+                        window.model.scale.setScalar(scale);
+                        
+                        // Camera movement
+                        const cameraY = 2 + Math.sin(progress * Math.PI) * 1;
+                        window.camera.position.y = cameraY;
+                        
+                        // Camera distance
+                        const cameraZ = 5 + Math.cos(progress * Math.PI) * 2;
+                        window.camera.position.z = cameraZ;
+                    }
+                }
+            });
+        }
+
+        function triggerSectionEffect(sectionId) {
+            if (!window.model || !window.scene) return;
+            
+            // Different effects for different sections
+            switch(sectionId) {
+                case 'feature1-section': // Dual-Action Therapy
+                    // Pulsating effect
+                    gsap.to(window.model.scale, {
+                        x: 1.1,
+                        y: 1.1,
+                        z: 1.1,
+                        duration: 0.5,
+                        yoyo: true,
+                        repeat: 1
+                    });
+                    break;
+                    
+                case 'feature2-section': // Smart Integration
+                    // Rotate to show different angle
+                    gsap.to(window.model.rotation, {
+                        y: window.model.rotation.y + Math.PI / 2,
+                        duration: 1,
+                        ease: "power2.inOut"
+                    });
+                    break;
+                    
+                case 'feature3-section': // Premium Design
+                    // Tilt for better view
+                    gsap.to(window.model.rotation, {
+                        x: 0.3,
+                        duration: 0.8,
+                        ease: "back.out(1.7)"
+                    });
+                    break;
+                    
+                case 'feature4-section': // Specifications
+                    // Reset to original position
+                    gsap.to(window.model.rotation, {
+                        x: 0,
+                        y: window.model.rotation.y,
+                        duration: 0.8
+                    });
+                    break;
+            }
+        }
+
+        function update3DBackground() {
+            // Calculate scroll percentage
+            const scrollTop = window.pageYOffset;
+            const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollPercent = scrollHeight > 0 ? scrollTop / scrollHeight : 0;
+            
+            // Update model rotation based on scroll
+            if (window.model) {
+                window.model.rotation.y = scrollPercent * Math.PI * 4;
+            }
+        }
+    </script>
     <script src="main.js"></script>
 </body>
 </html>
