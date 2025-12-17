@@ -419,6 +419,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     
     <!-- Main JS -->
+    <!-- Main JS -->
     <script>
         // Extended main.js functionality for product page
         window.addEventListener('load', function() {
@@ -467,8 +468,8 @@
                 0.1,
                 1000
             );
-            camera.position.z = 5;
-            camera.position.y = 2;
+            camera.position.z = 6;
+            camera.position.y = 1.5; // Adjusted for better centering
             
             // Setup renderer
             const canvas = document.getElementById('model-canvas');
@@ -487,14 +488,28 @@
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
             renderer.toneMappingExposure = 1.2;
             
-            // Add lighting
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            // Add enhanced lighting
+            // Ambient light with subtle color
+            const ambientLight = new THREE.AmbientLight(0x0ea5e9, 0.6);
             scene.add(ambientLight);
             
+            // Main directional light
             const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
             directionalLight.position.set(5, 10, 7);
             directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
             scene.add(directionalLight);
+            
+            // Fill light from opposite side
+            const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+            fillLight.position.set(-5, 5, -7);
+            scene.add(fillLight);
+            
+            // Rim light for edge highlighting
+            const rimLight = new THREE.DirectionalLight(0xffffff, 0.3);
+            rimLight.position.set(0, -5, -10);
+            scene.add(rimLight);
             
             // Try to load your local model
             let model = null;
@@ -529,17 +544,38 @@
                     box.getSize(size);
                     const maxDimension = Math.max(size.x, size.y, size.z);
                     
-                    // Scale to reasonable size
-                    const scaleFactor = 5 / maxDimension;
+                    console.log('Model dimensions:', {
+                        width: size.x.toFixed(2),
+                        height: size.y.toFixed(2),
+                        depth: size.z.toFixed(2),
+                        max: maxDimension.toFixed(2)
+                    });
+                    
+                    // Scale to reasonable size - centered in view
+                    const scaleFactor = 3.5 / maxDimension;
                     model.scale.setScalar(scaleFactor * 0.8);
                     
-                    // Center the model
+                    // Get new bounding box after scaling
                     box.setFromObject(model);
                     const center = new THREE.Vector3();
                     box.getCenter(center);
+                    
+                    console.log('Model center before adjustment:', {
+                        x: center.x.toFixed(2),
+                        y: center.y.toFixed(2),
+                        z: center.z.toFixed(2)
+                    });
+                    
+                    // Center the model - but keep it slightly higher for better visibility
                     model.position.x = -center.x;
-                    model.position.y = -center.y;
+                    model.position.y = -center.y + 0.5; // Lift it up by 0.5 units
                     model.position.z = -center.z;
+                    
+                    console.log('Model position after centering:', {
+                        x: model.position.x.toFixed(2),
+                        y: model.position.y.toFixed(2),
+                        z: model.position.z.toFixed(2)
+                    });
                     
                     // Setup materials
                     model.traverse(function(child) {
@@ -565,6 +601,9 @@
                     scene.add(model);
                     isModelLoaded = true;
                     
+                    // Position camera to show entire model
+                    adjustCameraForModel(model, camera);
+                    
                     // Hide loader
                     hideLoader();
                     
@@ -586,10 +625,50 @@
                     // Create fallback model
                     createFallbackModel(scene);
                     isModelLoaded = true;
+                    
+                    // Adjust camera for fallback model
+                    adjustCameraForModel(model, camera);
+                    
                     hideLoader();
                     showDemoNotice('Using demonstration model');
                 }
             );
+            
+            // Function to adjust camera based on model size
+            function adjustCameraForModel(model, camera) {
+                if (!model) return;
+                
+                const box = new THREE.Box3().setFromObject(model);
+                const size = new THREE.Vector3();
+                box.getSize(size);
+                const center = new THREE.Vector3();
+                box.getCenter(center);
+                
+                const maxDim = Math.max(size.x, size.y, size.z);
+                const fov = camera.fov * (Math.PI / 180);
+                let cameraZ = Math.abs(maxDim / Math.tan(fov / 2));
+                
+                // Add some padding
+                cameraZ *= 1.5;
+                
+                // Position camera
+                camera.position.z = Math.max(cameraZ, 5);
+                camera.position.y = center.y; // Match model's vertical center
+                camera.lookAt(center);
+                
+                console.log('Camera adjusted:', {
+                    position: {
+                        x: camera.position.x.toFixed(2),
+                        y: camera.position.y.toFixed(2),
+                        z: camera.position.z.toFixed(2)
+                    },
+                    target: {
+                        x: center.x.toFixed(2),
+                        y: center.y.toFixed(2),
+                        z: center.z.toFixed(2)
+                    }
+                });
+            }
             
             // Fallback model creation
             function createFallbackModel(scene) {
@@ -650,6 +729,8 @@
                 
                 // Scale appropriately
                 model.scale.setScalar(0.8);
+                
+                return model;
             }
             
             // Handle window resize
@@ -657,6 +738,11 @@
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
                 renderer.setSize(window.innerWidth, window.innerHeight);
+                
+                // Re-adjust camera if model exists
+                if (model) {
+                    adjustCameraForModel(model, camera);
+                }
             }
             window.addEventListener('resize', onWindowResize);
             
@@ -664,12 +750,10 @@
             function animate() {
                 requestAnimationFrame(animate);
                 
-                // Rotate model slowly
+                // Don't auto-rotate - rotation controlled by scroll only
+                // Only subtle floating motion
                 if (model && isModelLoaded) {
-                    model.rotation.y += 0.002;
-                    
-                    // Add subtle floating motion
-                    model.position.y = Math.sin(Date.now() * 0.001) * 0.05;
+                    model.position.y += Math.sin(Date.now() * 0.001) * 0.0005;
                 }
                 
                 renderer.render(scene, camera);
@@ -681,6 +765,7 @@
             window.camera = camera;
             window.model = model;
             window.isModelLoaded = isModelLoaded;
+            window.renderer = renderer;
         }
 
         // UI Helper functions
@@ -741,12 +826,6 @@
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         entry.target.classList.add('visible');
-                        
-                        // Trigger 3D effect when section comes into view
-                        const sectionId = entry.target.closest('section')?.id;
-                        if (sectionId) {
-                            triggerSectionEffect(sectionId);
-                        }
                     }
                 });
             }, observerOptions);
@@ -792,9 +871,6 @@
                         indicator.classList.remove('active');
                     }
                 });
-                
-                // Enhanced 3D background effects based on scroll
-                update3DBackground();
             });
 
             // Initialize GSAP scroll animations for 3D model
@@ -804,9 +880,23 @@
         }
 
         function setup3DScrollAnimations() {
-            if (!window.model || !window.scene || !window.camera) return;
+            if (!window.model || !window.scene || !window.camera) {
+                console.log('Waiting for model to load...');
+                setTimeout(setup3DScrollAnimations, 500);
+                return;
+            }
             
-            // Create timeline for scroll animations
+            console.log('Setting up 3D scroll animations...');
+            
+            // Kill any existing ScrollTriggers
+            ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+            
+            // Get the total scrollable height
+            const contentHeight = document.querySelector('.content-overlay').scrollHeight;
+            const windowHeight = window.innerHeight;
+            const scrollDistance = contentHeight - windowHeight;
+            
+            // Create a master timeline for scroll animations
             const tl = gsap.timeline({
                 scrollTrigger: {
                     trigger: '.content-overlay',
@@ -816,12 +906,60 @@
                     onUpdate: (self) => {
                         const progress = self.progress;
                         
-                        // Model position animation (left to right and back)
-                        const xPos = Math.sin(progress * Math.PI * 2) * 2;
-                        window.model.position.x = xPos;
+                        // 1. MODEL ROTATION (like index.html) - Only on scroll
+                        window.model.rotation.y = progress * Math.PI * 4; // 2 full rotations
                         
-                        // Section-based color changes
+                        // 2. MODEL POSITION - Move left/right based on feature card position
                         const sectionProgress = progress * 5; // 5 sections
+                        const sectionIndex = Math.floor(sectionProgress);
+                        
+                        // Determine which section we're in and position model accordingly
+                        switch(sectionIndex) {
+                            case 0: // Hero section - center
+                                gsap.to(window.model.position, {
+                                    x: 0,
+                                    duration: 0.5,
+                                    ease: "power2.out"
+                                });
+                                break;
+                            case 1: // Feature 1 (left card) - move right
+                                gsap.to(window.model.position, {
+                                    x: 3,
+                                    duration: 0.5,
+                                    ease: "power2.out"
+                                });
+                                break;
+                            case 2: // Feature 2 (right card) - move left
+                                gsap.to(window.model.position, {
+                                    x: -3,
+                                    duration: 0.5,
+                                    ease: "power2.out"
+                                });
+                                break;
+                            case 3: // Feature 3 (left card) - move right
+                                gsap.to(window.model.position, {
+                                    x: 3,
+                                    duration: 0.5,
+                                    ease: "power2.out"
+                                });
+                                break;
+                            case 4: // Feature 4 (right card) - move left
+                                gsap.to(window.model.position, {
+                                    x: -3,
+                                    duration: 0.5,
+                                    ease: "power2.out"
+                                });
+                                break;
+                        }
+                        
+                        // 3. CAMERA MOVEMENT - subtle zoom and vertical movement
+                        const cameraZ = 6 - (progress * 1.5); // Zoom in slightly as we scroll
+                        window.camera.position.z = Math.max(cameraZ, 4);
+                        
+                        const cameraY = 1.5 + Math.sin(progress * Math.PI) * 0.5;
+                        window.camera.position.y = cameraY;
+                        
+                        // 4. LIGHTING COLOR CHANGES - subtle transitions
                         const colors = [
                             0x0ea5e9, // Blue (brand color) - Hero
                             0xef4444, // Red - Therapy
@@ -834,108 +972,133 @@
                         const nextColorIndex = (currentColorIndex + 1) % colors.length;
                         const colorProgress = sectionProgress - currentColorIndex;
                         
-                        // Interpolate between colors
-                        const currentColor = colors[currentColorIndex];
-                        const nextColor = colors[nextColorIndex];
+                        if (currentColorIndex < colors.length) {
+                            // Update ambient light color
+                            window.scene.children.forEach(child => {
+                                if (child.isLight && child.type === 'AmbientLight') {
+                                    const currentColor = colors[currentColorIndex];
+                                    const nextColor = colors[nextColorIndex];
+                                    
+                                    const r1 = (currentColor >> 16) & 255;
+                                    const g1 = (currentColor >> 8) & 255;
+                                    const b1 = currentColor & 255;
+                                    
+                                    const r2 = (nextColor >> 16) & 255;
+                                    const g2 = (nextColor >> 8) & 255;
+                                    const b2 = nextColor & 255;
+                                    
+                                    const r = r1 + (r2 - r1) * colorProgress;
+                                    const g = g1 + (g2 - g1) * colorProgress;
+                                    const b = b1 + (b2 - b1) * colorProgress;
+                                    
+                                    child.color.r = r / 255;
+                                    child.color.g = g / 255;
+                                    child.color.b = b / 255;
+                                }
+                            });
+                        }
                         
-                        // Convert hex to RGB
-                        const r1 = (currentColor >> 16) & 255;
-                        const g1 = (currentColor >> 8) & 255;
-                        const b1 = currentColor & 255;
-                        
-                        const r2 = (nextColor >> 16) & 255;
-                        const g2 = (nextColor >> 8) & 255;
-                        const b2 = nextColor & 255;
-                        
-                        const r = Math.round(r1 + (r2 - r1) * colorProgress);
-                        const g = Math.round(g1 + (g2 - g1) * colorProgress);
-                        const b = Math.round(b1 + (b2 - b1) * colorProgress);
-                        
-                        const interpolatedColor = (r << 16) | (g << 8) | b;
-                        
-                        // Update ambient light color
-                        window.scene.children.forEach(child => {
-                            if (child.isLight && child.type === 'AmbientLight') {
-                                gsap.to(child.color, {
-                                    r: r / 255,
-                                    g: g / 255,
-                                    b: b / 255,
-                                    duration: 0.5
-                                });
-                            }
-                        });
-                        
-                        // Model scale animation
-                        const scale = 0.8 + Math.sin(progress * Math.PI * 4) * 0.1;
+                        // 5. MODEL SCALE - subtle pulsing
+                        const scale = 0.8 + Math.sin(progress * Math.PI * 8) * 0.05;
                         window.model.scale.setScalar(scale);
                         
-                        // Camera movement
-                        const cameraY = 2 + Math.sin(progress * Math.PI) * 1;
-                        window.camera.position.y = cameraY;
-                        
-                        // Camera distance
-                        const cameraZ = 5 + Math.cos(progress * Math.PI) * 2;
-                        window.camera.position.z = cameraZ;
+                        // 6. CAMERA LOOK AT - keep looking at model
+                        window.camera.lookAt(window.model.position);
+                    },
+                    onEnter: () => {
+                        console.log('Scroll animations started');
+                    },
+                    onLeave: () => {
+                        console.log('Scroll animations completed');
                     }
                 }
             });
+            
+            // Add section-specific triggers for more precise model positioning
+            const sections = [
+                { id: 'hero-section', x: 0 },
+                { id: 'feature1-section', x: 3 },    // Right (left card)
+                { id: 'feature2-section', x: -3 },   // Left (right card)
+                { id: 'feature3-section', x: 3 },    // Right (left card)
+                { id: 'feature4-section', x: -3 }    // Left (right card)
+            ];
+            
+            sections.forEach((section, index) => {
+                const element = document.getElementById(section.id);
+                if (element) {
+                    ScrollTrigger.create({
+                        trigger: element,
+                        start: 'top center',
+                        end: 'bottom center',
+                        onEnter: () => {
+                            // Smoothly move model to position
+                            gsap.to(window.model.position, {
+                                x: section.x,
+                                duration: 0.8,
+                                ease: "power2.out"
+                            });
+                        },
+                        onLeaveBack: () => {
+                            // When scrolling back up
+                            const prevSection = sections[Math.max(0, index - 1)];
+                            gsap.to(window.model.position, {
+                                x: prevSection.x,
+                                duration: 0.8,
+                                ease: "power2.out"
+                            });
+                        }
+                    });
+                }
+            });
+            
+            console.log('3D scroll animations setup complete');
         }
 
-        function triggerSectionEffect(sectionId) {
-            if (!window.model || !window.scene) return;
+        // Update model positioning based on visible feature cards
+        function updateModelPosition() {
+            if (!window.model) return;
             
-            // Different effects for different sections
-            switch(sectionId) {
-                case 'feature1-section': // Dual-Action Therapy
-                    // Pulsating effect
-                    gsap.to(window.model.scale, {
-                        x: 1.1,
-                        y: 1.1,
-                        z: 1.1,
+            // Get all feature sections
+            const featureSections = [
+                'feature1-section',
+                'feature2-section', 
+                'feature3-section',
+                'feature4-section'
+            ];
+            
+            // Find which section is most visible
+            let mostVisibleSection = null;
+            let maxVisibility = 0;
+            
+            featureSections.forEach(sectionId => {
+                const section = document.getElementById(sectionId);
+                if (section) {
+                    const rect = section.getBoundingClientRect();
+                    const visibility = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+                    
+                    if (visibility > maxVisibility && visibility > window.innerHeight * 0.3) {
+                        maxVisibility = visibility;
+                        mostVisibleSection = sectionId;
+                    }
+                }
+            });
+            
+            // Position model based on which section is visible
+            if (mostVisibleSection) {
+                const featureContent = document.querySelector(`#${mostVisibleSection} .feature-content`);
+                if (featureContent) {
+                    const rect = featureContent.getBoundingClientRect();
+                    const isLeftCard = rect.left < window.innerWidth / 2;
+                    
+                    // Move model opposite to card position
+                    const targetX = isLeftCard ? 3 : -3; // Right for left cards, left for right cards
+                    
+                    gsap.to(window.model.position, {
+                        x: targetX,
                         duration: 0.5,
-                        yoyo: true,
-                        repeat: 1
+                        ease: "power2.out"
                     });
-                    break;
-                    
-                case 'feature2-section': // Smart Integration
-                    // Rotate to show different angle
-                    gsap.to(window.model.rotation, {
-                        y: window.model.rotation.y + Math.PI / 2,
-                        duration: 1,
-                        ease: "power2.inOut"
-                    });
-                    break;
-                    
-                case 'feature3-section': // Premium Design
-                    // Tilt for better view
-                    gsap.to(window.model.rotation, {
-                        x: 0.3,
-                        duration: 0.8,
-                        ease: "back.out(1.7)"
-                    });
-                    break;
-                    
-                case 'feature4-section': // Specifications
-                    // Reset to original position
-                    gsap.to(window.model.rotation, {
-                        x: 0,
-                        y: window.model.rotation.y,
-                        duration: 0.8
-                    });
-                    break;
-            }
-        }
-
-        function update3DBackground() {
-            // Calculate scroll percentage
-            const scrollTop = window.pageYOffset;
-            const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-            const scrollPercent = scrollHeight > 0 ? scrollTop / scrollHeight : 0;
-            
-            // Update model rotation based on scroll
-            if (window.model) {
-                window.model.rotation.y = scrollPercent * Math.PI * 4;
+                }
             }
         }
     </script>
