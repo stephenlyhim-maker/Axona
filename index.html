@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axona - The Future of Wellness</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            '50': '#f0f9ff', '100': '#e0f2fe', '200': '#bae6fd', '300': '#7dd3fc',
+                            '400': '#38bdf8', '500': '#0ea5e9', '600': '#0284c7', '700': '#0369a1',
+                            '800': '#075985', '900': '#0c4a6e', '950': '#082f49',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-white text-gray-900">
+
+    <header class="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-lg border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex-shrink-0">
+                    <a href="index.html" class="text-2xl font-bold text-gray-900">Axona</a>
+                </div>
+                <nav class="hidden md:flex md:space-x-10">
+                    <a href="index.html" class="nav-item text-gray-500 hover:text-gray-900 font-medium" data-page="index">Products</a>
+                    <a href="about.html" class="nav-item text-gray-500 hover:text-gray-900 font-medium" data-page="about">About Us</a>
+                </nav>
+                <div class="flex md:hidden">
+                    <button id="mobile-menu-btn" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-500">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="block h-6 w-6" id="icon-open" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
+                        <svg class="hidden block h-6 w-6" id="icon-close" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden border-t border-gray-200">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="index.html" class="nav-item block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50" data-page="index">Products</a>
+                <a href="about.html" class="nav-item block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50" data-page="about">About Us</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="relative text-center px-4 py-32 sm:py-48 lg:py-56">
+            <h1 class="animate-on-scroll text-5xl sm:text-7xl font-bold tracking-tight text-gray-900">
+                A new era of relief.
+            </h1>
+            <p class="animate-on-scroll delay-100 mt-6 text-xl sm:text-2xl max-w-3xl mx-auto text-gray-600">
+                Discover AxonaPulse, our revolutionary IR and electroimpulse neckwear designed for your wellness.
+            </p>
+            <div class="animate-on-scroll delay-200 mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="product-detail.html" class="w-full sm:w-auto inline-block bg-brand-600 text-white px-8 py-3 rounded-full text-lg font-medium hover:bg-brand-700 transition-colors">
+                    Learn More
+                </a>
+            </div>
+        </div>
+        
+        <div class="bg-gray-50 py-24 sm:py-32">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="animate-on-scroll text-4xl font-bold text-center mb-16">Our Innovations</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    
+                    <a href="product-detail.html" class="animate-on-scroll delay-100 bg-white rounded-2xl shadow-xl overflow-hidden group block">
+                        <div class="relative">
+                            <img class="w-full h-80 object-cover group-hover:scale-105 transition-transform duration-300 ease-in-out" 
+                                 src="https://placehold.co/600x400/e0f2fe/0c4a6e?text=AxonaPulse+Neckwear" 
+                                 alt="AxonaPulse Neckwear">
+                            <div class="absolute top-0 left-0 bg-black/30 w-full h-full"></div>
+                            <div class="absolute top-8 left-8">
+                                <h3 class="text-3xl font-bold text-white">AxonaPulse</h3>
+                                <p class="text-lg text-white/90">IR & Electroimpulse Neckwear</p>
+                            </div>
+                        </div>
+                    </a>
+                    
+                    <div class="animate-on-scroll delay-200 bg-white rounded-2xl shadow-xl overflow-hidden group">
+                        <div class="relative">
+                            <img class="w-full h-80 object-cover group-hover:scale-105 transition-transform duration-300 ease-in-out" 
+                                 src="https://placehold.co/600x400/f0f9ff/0c4a6e?text=Coming+Soon" 
+                                 alt="Future Product">
+                            <div class="absolute top-0 left-0 bg-black/30 w-full h-full"></div>
+                            <div class="absolute top-8 left-8">
+                                <h3 class="text-3xl font-bold text-white">The Future</h3>
+                                <p class="text-lg text-white/90">More innovations on the way.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-900 text-gray-300 border-t border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12">
+                <div class="md:col-span-1">
+                    <h3 class="text-2xl font-bold text-white">Axona</h3>
+                    <p class="mt-2 text-gray-400">The Future of Wellness</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold uppercase text-gray-400 tracking-wider">Navigate</h4>
+                    <ul class="mt-4 space-y-3">
+                        <li><a href="index.html" class="text-base hover:text-white">Products</a></li>
+                        <li><a href="about.html" class="text-base hover:text-white">About Us</a></li>
+                        <li><a href="product-detail.html" class="text-base hover:text-white">AxonaPulse</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold uppercase text-gray-400 tracking-wider">Contact Us</h4>
+                    <ul class="mt-4 space-y-3">
+                        <li><p class="text-base">123 Innovation Drive<br>Med-Tech Valley, CA 94000</p></li>
+                        <li><a href="mailto:hello@axona.com" class="text-base hover:text-white">hello@axona.com</a></li>
+                        <li><a href="tel:1-800-555-AXON" class="text-base hover:text-white">1-800-555-AXON</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold uppercase text-gray-400 tracking-wider">Follow Us</h4>
+                    <div class="flex mt-4 space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white"><span class="sr-only">Twitter</span><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.71v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"></path></svg></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><span class="sr-only">LinkedIn</span><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" clip-rule="evenodd"></path></svg></a>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-12 border-t border-gray-700 pt-8 text-center">
+                <p class="text-base text-gray-400">&copy; 2025 Axona Medical, Inc. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    <script src="main.js"></script>
+</body>
+</html>

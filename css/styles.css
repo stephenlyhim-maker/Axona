@@ -1,0 +1,41 @@
+/* Base styling for smooth fonts */
+body {
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden; /* Prevent horizontal scrollbars during animations */
+}
+
+/* Style for the active navigation link */
+.nav-link-active {
+    color: #0ea5e9; /* brand-500 */
+    font-weight: 600;
+}
+
+/* --- ANIMATIONS --- */
+
+/* Initial state: hidden and pushed down */
+.animate-on-scroll {
+    opacity: 0;
+    transform: translateY(40px);
+    /* Apple-style easing: fast start, slow finish */
+    transition: opacity 1.0s cubic-bezier(0.16, 1, 0.3, 1), transform 1.0s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform;
+}
+
+/* Active state: visible and in original position */
+.animate-on-scroll.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Stagger delays for group animations (like grids) */
+.delay-100 { transition-delay: 0.1s; }
+.delay-200 { transition-delay: 0.2s; }
+.delay-300 { transition-delay: 0.3s; }
+
+/* Smooth scale on hover for product cards */
+.group:hover .group-hover\:scale-105 {
+    transform: scale(1.03); /* Made slightly subtler for a premium feel */
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
