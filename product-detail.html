@@ -421,344 +421,310 @@
     <!-- Main JS -->
     <!-- Main JS -->
     <script>
-        // Extended main.js functionality for product page
-        window.addEventListener('load', function() {
-            console.log('Product page loaded, initializing 3D viewer...');
-            
-            // Initialize 3D viewer with your local model
-            initProductViewer();
-            
-            // Setup custom scroll animations for this page
-            setupProductScrollAnimations();
-            
-            // Initialize mobile menu
-            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-            const mobileMenu = document.getElementById('mobile-menu');
-            const iconOpen = document.getElementById('icon-open');
-            const iconClose = document.getElementById('icon-close');
-            
-            if (mobileMenuBtn && mobileMenu) {
-                mobileMenuBtn.addEventListener('click', function() {
-                    mobileMenu.classList.toggle('hidden');
-                    iconOpen.classList.toggle('hidden');
-                    iconClose.classList.toggle('hidden');
-                });
+// Enhanced scroll effects for product page
+function setupProductScrollAnimations() {
+    // Animation for feature content
+    const observerOptions = {
+        threshold: 0.2,
+        rootMargin: '0px 0px -100px 0px'
+    };
+
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
             }
         });
+    }, observerOptions);
 
-        // Custom 3D viewer for product page
-        function initProductViewer() {
-            console.log('Initializing product 3D viewer...');
-            
-            // Check if Three.js is available
-            if (typeof THREE === 'undefined') {
-                console.error('Three.js not loaded');
-                hideLoader();
-                return;
+    // Observe all animate-on-scroll elements
+    document.querySelectorAll('.animate-on-scroll').forEach(el => {
+        observer.observe(el);
+    });
+
+    // Setup section indicator
+    const sections = ['hero-section', 'feature1-section', 'feature2-section', 'feature3-section', 'feature4-section'];
+    const indicators = document.querySelectorAll('.indicator-dot');
+    
+    // Scroll to section when indicator is clicked
+    indicators.forEach((indicator, index) => {
+        indicator.addEventListener('click', () => {
+            const section = document.getElementById(sections[index]);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth' });
             }
-            
-            // Setup scene
-            const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x000000);
-            
-            // Setup camera
-            const camera = new THREE.PerspectiveCamera(
-                45,
-                window.innerWidth / window.innerHeight,
-                0.1,
-                1000
-            );
-            camera.position.z = 6;
-            camera.position.y = 1.5; // Adjusted for better centering
-            
-            // Setup renderer
-            const canvas = document.getElementById('model-canvas');
-            if (!canvas) {
-                console.error('Canvas element not found');
-                return;
-            }
-            
-            const renderer = new THREE.WebGLRenderer({
-                canvas: canvas,
-                antialias: true,
-                alpha: true
-            });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.shadowMap.enabled = true;
-            renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.2;
-            
-            // Add enhanced lighting
-            // Ambient light with subtle color
-            const ambientLight = new THREE.AmbientLight(0x0ea5e9, 0.6);
-            scene.add(ambientLight);
-            
-            // Main directional light
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(5, 10, 7);
-            directionalLight.castShadow = true;
-            directionalLight.shadow.mapSize.width = 2048;
-            directionalLight.shadow.mapSize.height = 2048;
-            scene.add(directionalLight);
-            
-            // Fill light from opposite side
-            const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
-            fillLight.position.set(-5, 5, -7);
-            scene.add(fillLight);
-            
-            // Rim light for edge highlighting
-            const rimLight = new THREE.DirectionalLight(0xffffff, 0.3);
-            rimLight.position.set(0, -5, -10);
-            scene.add(rimLight);
-            
-            // Try to load your local model
-            let model = null;
-            let isModelLoaded = false;
-            
-            // Create loader
-            const loader = new THREE.GLTFLoader();
-            
-            // Set up Draco loader if available
-            if (typeof THREE.DRACOLoader !== 'undefined') {
-                try {
-                    const dracoLoader = new THREE.DRACOLoader();
-                    dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/draco/');
-                    loader.setDRACOLoader(dracoLoader);
-                    console.log('✅ Draco loader configured');
-                } catch (dracoError) {
-                    console.warn('Could not configure Draco loader:', dracoError);
+        });
+    });
+
+    // Update active indicator on scroll
+    window.addEventListener('scroll', () => {
+        let currentSection = '';
+        
+        sections.forEach(sectionId => {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                const rect = section.getBoundingClientRect();
+                if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
+                    currentSection = sectionId;
                 }
             }
-            
-            // Load your local model
-            console.log('Loading local model: models/product/product.glb');
-            loader.load(
-                'models/product/product.glb', // Your local model path
-                function(gltf) {
-                    console.log('✅ Local model loaded successfully!');
-                    model = gltf.scene;
-                    
-                    // Scale the model appropriately
-                    const box = new THREE.Box3().setFromObject(model);
-                    const size = new THREE.Vector3();
-                    box.getSize(size);
-                    const maxDimension = Math.max(size.x, size.y, size.z);
-                    
-                    console.log('Model dimensions:', {
-                        width: size.x.toFixed(2),
-                        height: size.y.toFixed(2),
-                        depth: size.z.toFixed(2),
-                        max: maxDimension.toFixed(2)
-                    });
-                    
-                    // Scale to reasonable size - centered in view
-                    const scaleFactor = 3.5 / maxDimension;
-                    model.scale.setScalar(scaleFactor * 0.8);
-                    
-                    // Get new bounding box after scaling
-                    box.setFromObject(model);
-                    const center = new THREE.Vector3();
-                    box.getCenter(center);
-                    
-                    console.log('Model center before adjustment:', {
-                        x: center.x.toFixed(2),
-                        y: center.y.toFixed(2),
-                        z: center.z.toFixed(2)
-                    });
-                    
-                    // Center the model - but keep it slightly higher for better visibility
-                    model.position.x = -center.x;
-                    model.position.y = -center.y + 0.5; // Lift it up by 0.5 units
-                    model.position.z = -center.z;
-                    
-                    console.log('Model position after centering:', {
-                        x: model.position.x.toFixed(2),
-                        y: model.position.y.toFixed(2),
-                        z: model.position.z.toFixed(2)
-                    });
-                    
-                    // Setup materials
-                    model.traverse(function(child) {
-                        if (child.isMesh) {
-                            child.castShadow = true;
-                            child.receiveShadow = true;
-                            
-                            if (child.material) {
-                                // Enhance materials for better appearance
-                                child.material.needsUpdate = true;
-                                
-                                // Add some metallic sheen if not present
-                                if (child.material.type === 'MeshStandardMaterial' || 
-                                    child.material.type === 'MeshPhysicalMaterial') {
-                                    child.material.metalness = 0.8;
-                                    child.material.roughness = 0.2;
-                                    child.material.envMapIntensity = 1.0;
-                                }
-                            }
-                        }
-                    });
-                    
-                    scene.add(model);
-                    isModelLoaded = true;
-                    
-                    // Position camera to show entire model
-                    adjustCameraForModel(model, camera);
-                    
-                    // Hide loader
-                    hideLoader();
-                    
-                    // Show success notice
-                    showDemoNotice('✅ AxonaPulse 3D Model Loaded');
-                    
-                    console.log('Model loaded and ready');
-                },
-                function(xhr) {
-                    // Loading progress
-                    const percent = (xhr.loaded / (xhr.total || 10000000)) * 100;
-                    updateProgressBar(Math.min(percent, 100));
-                    updateLoaderMessage(`Loading 3D Model: ${Math.round(percent)}%`);
-                },
-                function(error) {
-                    console.error('❌ Failed to load local model:', error);
-                    updateLoaderMessage('Local model not found. Creating demonstration model...');
-                    
-                    // Create fallback model
-                    createFallbackModel(scene);
-                    isModelLoaded = true;
-                    
-                    // Adjust camera for fallback model
-                    adjustCameraForModel(model, camera);
-                    
-                    hideLoader();
-                    showDemoNotice('Using demonstration model');
-                }
-            );
-            
-            // Function to adjust camera based on model size
-            function adjustCameraForModel(model, camera) {
-                if (!model) return;
+        });
+        
+        indicators.forEach(indicator => {
+            const section = indicator.getAttribute('data-section');
+            if (currentSection.includes(section)) {
+                indicator.classList.add('active');
+            } else {
+                indicator.classList.remove('active');
+            }
+        });
+    });
+
+    // Initialize GSAP scroll animations for 3D model
+    if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+        setup3DScrollAnimations();
+    }
+}
+
+function setup3DScrollAnimations() {
+    if (!window.model || !window.scene || !window.camera) {
+        console.log('Waiting for model to load...');
+        setTimeout(setup3DScrollAnimations, 500);
+        return;
+    }
+    
+    console.log('Setting up 3D scroll animations...');
+    
+    // Kill any existing ScrollTriggers
+    ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+    
+    // Create a master timeline for scroll animations
+    const tl = gsap.timeline({
+        scrollTrigger: {
+            trigger: '.content-overlay',
+            start: 'top top',
+            end: 'bottom bottom',
+            scrub: 1,
+            onUpdate: (self) => {
+                const progress = self.progress;
                 
-                const box = new THREE.Box3().setFromObject(model);
-                const size = new THREE.Vector3();
-                box.getSize(size);
-                const center = new THREE.Vector3();
-                box.getCenter(center);
-                
-                const maxDim = Math.max(size.x, size.y, size.z);
-                const fov = camera.fov * (Math.PI / 180);
-                let cameraZ = Math.abs(maxDim / Math.tan(fov / 2));
-                
-                // Add some padding
-                cameraZ *= 1.5;
-                
-                // Position camera
-                camera.position.z = Math.max(cameraZ, 5);
-                camera.position.y = center.y; // Match model's vertical center
-                camera.lookAt(center);
-                
-                console.log('Camera adjusted:', {
-                    position: {
-                        x: camera.position.x.toFixed(2),
-                        y: camera.position.y.toFixed(2),
-                        z: camera.position.z.toFixed(2)
-                    },
-                    target: {
-                        x: center.x.toFixed(2),
-                        y: center.y.toFixed(2),
-                        z: center.z.toFixed(2)
+                // 1. MODEL ROTATION - like index.html
+                if (window.model) {
+                    window.model.rotation.y = progress * Math.PI * 4; // 2 full rotations
+                    
+                    // 2. MODEL POSITION - Move left/right based on scroll position
+                    // Map progress (0-1) to x position (-3 to 3)
+                    const sectionCount = 5;
+                    const sectionProgress = progress * sectionCount;
+                    const sectionIndex = Math.floor(sectionProgress);
+                    
+                    // Set target positions for each section
+                    const sectionPositions = [0, 3, -3, 3, -3]; // Center, Right, Left, Right, Left
+                    
+                    if (sectionIndex < sectionPositions.length) {
+                        // Smooth transition between sections
+                        const sectionFraction = sectionProgress - sectionIndex;
+                        const currentPos = sectionPositions[sectionIndex];
+                        const nextPos = sectionIndex + 1 < sectionPositions.length ? sectionPositions[sectionIndex + 1] : currentPos;
+                        const targetX = currentPos + (nextPos - currentPos) * sectionFraction;
+                        
+                        window.model.position.x = targetX;
                     }
-                });
-            }
-            
-            // Fallback model creation
-            function createFallbackModel(scene) {
-                console.log('Creating fallback demonstration model...');
-                
-                const group = new THREE.Group();
-                
-                // Create a neckwear-like shape
-                const mainGeometry = new THREE.TorusGeometry(1.5, 0.3, 16, 100);
-                const mainMaterial = new THREE.MeshPhysicalMaterial({
-                    color: 0x0ea5e9,
-                    metalness: 0.9,
-                    roughness: 0.1,
-                    clearcoat: 1,
-                    clearcoatRoughness: 0.05
-                });
-                const mainRing = new THREE.Mesh(mainGeometry, mainMaterial);
-                
-                // Add inner padding
-                const paddingGeometry = new THREE.TorusGeometry(1.2, 0.2, 16, 100);
-                const paddingMaterial = new THREE.MeshStandardMaterial({
-                    color: 0x1e293b,
-                    roughness: 0.8,
-                    metalness: 0.1
-                });
-                const padding = new THREE.Mesh(paddingGeometry, paddingMaterial);
-                
-                // Add control unit
-                const controlGeometry = new THREE.BoxGeometry(0.8, 0.4, 0.2);
-                const controlMaterial = new THREE.MeshPhysicalMaterial({
-                    color: 0x334155,
-                    metalness: 0.95,
-                    roughness: 0.05
-                });
-                const controlUnit = new THREE.Mesh(controlGeometry, controlMaterial);
-                controlUnit.position.set(0, 1.8, 0.3);
-                
-                // Add lights/indicators
-                const lightGeometry = new THREE.SphereGeometry(0.05, 16, 16);
-                const lightMaterial = new THREE.MeshBasicMaterial({ color: 0x10b981 });
-                
-                for (let i = 0; i < 8; i++) {
-                    const angle = (i / 8) * Math.PI * 2;
-                    const light = new THREE.Mesh(lightGeometry, lightMaterial);
-                    light.position.set(
-                        Math.cos(angle) * 1.5,
-                        Math.sin(angle) * 0.3,
-                        0.35
-                    );
-                    group.add(light);
-                }
-                
-                group.add(mainRing);
-                group.add(padding);
-                group.add(controlUnit);
-                model = group;
-                scene.add(model);
-                
-                // Scale appropriately
-                model.scale.setScalar(0.8);
-                
-                return model;
-            }
-            
-            // Handle window resize
-            function onWindowResize() {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-                
-                // Re-adjust camera if model exists
-                if (model) {
-                    adjustCameraForModel(model, camera);
+                    
+                    // 3. CAMERA MOVEMENT - subtle zoom and vertical movement
+                    const cameraZ = 6 - (progress * 1.5); // Zoom in slightly as we scroll
+                    window.camera.position.z = Math.max(cameraZ, 4);
+                    
+                    const cameraY = 1.5 + Math.sin(progress * Math.PI) * 0.5;
+                    window.camera.position.y = cameraY;
+                    
+                    // 4. MODEL SCALE - subtle pulsing
+                    const scale = 0.8 + Math.sin(progress * Math.PI * 8) * 0.05;
+                    window.model.scale.setScalar(scale);
+                    
+                    // 5. Keep camera looking at model
+                    window.camera.lookAt(window.model.position);
                 }
             }
-            window.addEventListener('resize', onWindowResize);
-            
-            // Animation loop
-            function animate() {
-                requestAnimationFrame(animate);
-                
-                // Don't auto-rotate - rotation controlled by scroll only
-                // Only subtle floating motion
-                if (model && isModelLoaded) {
-                    model.position.y += Math.sin(Date.now() * 0.001) * 0.0005;
+        }
+    });
+    
+    // Add section-specific triggers for more precise model positioning
+    const sections = [
+        { id: 'hero-section', x: 0 },
+        { id: 'feature1-section', x: 3 },    // Right (left card)
+        { id: 'feature2-section', x: -3 },   // Left (right card)
+        { id: 'feature3-section', x: 3 },    // Right (left card)
+        { id: 'feature4-section', x: -3 }    // Left (right card)
+    ];
+    
+    sections.forEach((section, index) => {
+        const element = document.getElementById(section.id);
+        if (element) {
+            ScrollTrigger.create({
+                trigger: element,
+                start: 'top center',
+                end: 'bottom center',
+                onEnter: () => {
+                    if (window.model) {
+                        gsap.to(window.model.position, {
+                            x: section.x,
+                            duration: 0.8,
+                            ease: "power2.out"
+                        });
+                    }
+                },
+                onLeaveBack: () => {
+                    if (window.model) {
+                        const prevSection = sections[Math.max(0, index - 1)];
+                        gsap.to(window.model.position, {
+                            x: prevSection.x,
+                            duration: 0.8,
+                            ease: "power2.out"
+                        });
+                    }
                 }
-                
-                renderer.render(scene, camera);
-            }
-            animate();
+            });
+        }
+    });
+    
+    console.log('3D scroll animations setup complete');
+}
+
+// Also, update the initProductViewer function to ensure model is properly accessible
+function initProductViewer() {
+    console.log('Initializing product 3D viewer...');
+    
+    // Check if Three.js is available
+    if (typeof THREE === 'undefined') {
+        console.error('Three.js not loaded');
+        hideLoader();
+        return;
+    }
+    
+    // Setup scene
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
+    
+    // Setup camera
+    const camera = new THREE.PerspectiveCamera(
+        45,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+    );
+    camera.position.z = 6;
+    camera.position.y = 1.5;
+    
+    // Setup renderer
+    const canvas = document.getElementById('model-canvas');
+    if (!canvas) {
+        console.error('Canvas element not found');
+        return;
+    }
+    
+    const renderer = new THREE.WebGLRenderer({
+        canvas: canvas,
+        antialias: true,
+        alpha: true
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.2;
+    
+    // Add lighting
+    const ambientLight = new THREE.AmbientLight(0x0ea5e9, 0.6);
+    scene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(5, 10, 7);
+    directionalLight.castShadow = true;
+    scene.add(directionalLight);
+    
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+    fillLight.position.set(-5, 5, -7);
+    scene.add(fillLight);
+    
+    const rimLight = new THREE.DirectionalLight(0xffffff, 0.3);
+    rimLight.position.set(0, -5, -10);
+    scene.add(rimLight);
+    
+    // Try to load your local model
+    let model = null;
+    let isModelLoaded = false;
+    
+    // Create loader
+    const loader = new THREE.GLTFLoader();
+    
+    // Set up Draco loader if available
+    if (typeof THREE.DRACOLoader !== 'undefined') {
+        try {
+            const dracoLoader = new THREE.DRACOLoader();
+            dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/draco/');
+            loader.setDRACOLoader(dracoLoader);
+            console.log('✅ Draco loader configured');
+        } catch (dracoError) {
+            console.warn('Could not configure Draco loader:', dracoError);
+        }
+    }
+    
+    // Load your local model
+    console.log('Loading local model: models/product/product.glb');
+    loader.load(
+        'models/product/product.glb',
+        function(gltf) {
+            console.log('✅ Local model loaded successfully!');
+            model = gltf.scene;
+            
+            // Scale the model appropriately
+            const box = new THREE.Box3().setFromObject(model);
+            const size = new THREE.Vector3();
+            box.getSize(size);
+            const maxDimension = Math.max(size.x, size.y, size.z);
+            
+            const scaleFactor = 3.5 / maxDimension;
+            model.scale.setScalar(scaleFactor * 0.8);
+            
+            // Center the model
+            box.setFromObject(model);
+            const center = new THREE.Vector3();
+            box.getCenter(center);
+            
+            model.position.x = -center.x;
+            model.position.y = -center.y + 0.5;
+            model.position.z = -center.z;
+            
+            // Setup materials
+            model.traverse(function(child) {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                    
+                    if (child.material) {
+                        child.material.needsUpdate = true;
+                        
+                        if (child.material.type === 'MeshStandardMaterial' || 
+                            child.material.type === 'MeshPhysicalMaterial') {
+                            child.material.metalness = 0.8;
+                            child.material.roughness = 0.2;
+                            child.material.envMapIntensity = 1.0;
+                        }
+                    }
+                }
+            });
+            
+            scene.add(model);
+            isModelLoaded = true;
+            
+            // Position camera
+            adjustCameraForModel(model, camera);
+            
+            // Hide loader
+            hideLoader();
+            
+            // Show success notice
+            showDemoNotice('✅ AxonaPulse 3D Model Loaded');
             
             // Store references globally for scroll effects
             window.scene = scene;
@@ -766,341 +732,194 @@
             window.model = model;
             window.isModelLoaded = isModelLoaded;
             window.renderer = renderer;
+            
+            // Setup scroll animations
+            setupProductScrollAnimations();
+            
+            console.log('Model loaded and ready');
+        },
+        function(xhr) {
+            const percent = (xhr.loaded / (xhr.total || 10000000)) * 100;
+            updateProgressBar(Math.min(percent, 100));
+            updateLoaderMessage(`Loading 3D Model: ${Math.round(percent)}%`);
+        },
+        function(error) {
+            console.error('❌ Failed to load local model:', error);
+            updateLoaderMessage('Local model not found. Creating demonstration model...');
+            
+            // Create fallback model
+            createFallbackModel(scene);
+            isModelLoaded = true;
+            
+            // Adjust camera for fallback model
+            adjustCameraForModel(model, camera);
+            
+            hideLoader();
+            showDemoNotice('Using demonstration model');
+            
+            // Store references
+            window.scene = scene;
+            window.camera = camera;
+            window.model = model;
+            window.isModelLoaded = isModelLoaded;
+            window.renderer = renderer;
+            
+            // Setup scroll animations
+            setupProductScrollAnimations();
         }
-
-        // UI Helper functions
-        function updateLoaderMessage(message) {
-            const loader = document.getElementById('loader');
-            if (loader) {
-                const h3 = loader.querySelector('h3');
-                if (h3) {
-                    h3.textContent = message;
-                }
+    );
+    
+    function adjustCameraForModel(model, camera) {
+        if (!model) return;
+        
+        const box = new THREE.Box3().setFromObject(model);
+        const size = new THREE.Vector3();
+        box.getSize(size);
+        const center = new THREE.Vector3();
+        box.getCenter(center);
+        
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const fov = camera.fov * (Math.PI / 180);
+        let cameraZ = Math.abs(maxDim / Math.tan(fov / 2));
+        
+        cameraZ *= 1.5;
+        camera.position.z = Math.max(cameraZ, 5);
+        camera.position.y = center.y;
+        camera.lookAt(center);
+    }
+    
+    function createFallbackModel(scene) {
+        console.log('Creating fallback demonstration model...');
+        
+        const group = new THREE.Group();
+        
+        // Create a neckwear-like shape
+        const mainGeometry = new THREE.TorusGeometry(1.5, 0.3, 16, 100);
+        const mainMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0x0ea5e9,
+            metalness: 0.9,
+            roughness: 0.1,
+            clearcoat: 1,
+            clearcoatRoughness: 0.05
+        });
+        const mainRing = new THREE.Mesh(mainGeometry, mainMaterial);
+        
+        const paddingGeometry = new THREE.TorusGeometry(1.2, 0.2, 16, 100);
+        const paddingMaterial = new THREE.MeshStandardMaterial({
+            color: 0x1e293b,
+            roughness: 0.8,
+            metalness: 0.1
+        });
+        const padding = new THREE.Mesh(paddingGeometry, paddingMaterial);
+        
+        const controlGeometry = new THREE.BoxGeometry(0.8, 0.4, 0.2);
+        const controlMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0x334155,
+            metalness: 0.95,
+            roughness: 0.05
+        });
+        const controlUnit = new THREE.Mesh(controlGeometry, controlMaterial);
+        controlUnit.position.set(0, 1.8, 0.3);
+        
+        // Add lights/indicators
+        const lightGeometry = new THREE.SphereGeometry(0.05, 16, 16);
+        const lightMaterial = new THREE.MeshBasicMaterial({ color: 0x10b981 });
+        
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            const light = new THREE.Mesh(lightGeometry, lightMaterial);
+            light.position.set(
+                Math.cos(angle) * 1.5,
+                Math.sin(angle) * 0.3,
+                0.35
+            );
+            group.add(light);
+        }
+        
+        group.add(mainRing);
+        group.add(padding);
+        group.add(controlUnit);
+        model = group;
+        scene.add(model);
+        
+        // Scale appropriately
+        model.scale.setScalar(0.8);
+        
+        return model;
+    }
+    
+    // Handle window resize
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        
+        if (model) {
+            adjustCameraForModel(model, camera);
+        }
+    }
+    window.addEventListener('resize', onWindowResize);
+    
+    // Animation loop
+    function animate() {
+        requestAnimationFrame(animate);
+        
+        // Subtle floating motion when not scrolling
+        if (model && isModelLoaded) {
+            // Only float if we're not actively scrolling
+            if (!ScrollTrigger.isScrolling || !window.scrollAnimationActive) {
+                model.position.y += Math.sin(Date.now() * 0.001) * 0.0005;
             }
         }
+        
+        renderer.render(scene, camera);
+    }
+    animate();
+}
 
-        function updateProgressBar(percent) {
-            const progressBar = document.querySelector('.progress-bar');
-            if (progressBar) {
-                progressBar.style.width = `${percent}%`;
-            }
+// UI Helper functions (keep existing ones)
+function updateLoaderMessage(message) {
+    const loader = document.getElementById('loader');
+    if (loader) {
+        const h3 = loader.querySelector('h3');
+        if (h3) {
+            h3.textContent = message;
         }
+    }
+}
 
-        function hideLoader() {
-            const loader = document.getElementById('loader');
-            if (loader) {
-                loader.style.opacity = '0';
-                setTimeout(() => {
-                    loader.style.display = 'none';
-                }, 500);
-            }
-        }
+function updateProgressBar(percent) {
+    const progressBar = document.querySelector('.progress-bar');
+    if (progressBar) {
+        progressBar.style.width = `${percent}%`;
+    }
+}
 
-        function showDemoNotice(message) {
-            const demoNotice = document.getElementById('demo-notice');
-            if (demoNotice) {
-                demoNotice.textContent = message;
-                demoNotice.style.display = 'block';
-                
-                // Auto-hide after 5 seconds
-                setTimeout(() => {
-                    demoNotice.style.opacity = '0.5';
-                    
-                    // Fade out completely after another 3 seconds
-                    setTimeout(() => {
-                        demoNotice.style.display = 'none';
-                    }, 3000);
-                }, 5000);
-            }
-        }
+function hideLoader() {
+    const loader = document.getElementById('loader');
+    if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => {
+            loader.style.display = 'none';
+        }, 500);
+    }
+}
 
-        // Enhanced scroll effects for product page
-        function setupProductScrollAnimations() {
-            // Animation for feature content
-            const observerOptions = {
-                threshold: 0.2,
-                rootMargin: '0px 0px -100px 0px'
-            };
-
-            const observer = new IntersectionObserver(function(entries) {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                    }
-                });
-            }, observerOptions);
-
-            // Observe all animate-on-scroll elements
-            document.querySelectorAll('.animate-on-scroll').forEach(el => {
-                observer.observe(el);
-            });
-
-            // Setup section indicator
-            const sections = ['hero-section', 'feature1-section', 'feature2-section', 'feature3-section', 'feature4-section'];
-            const indicators = document.querySelectorAll('.indicator-dot');
+function showDemoNotice(message) {
+    const demoNotice = document.getElementById('demo-notice');
+    if (demoNotice) {
+        demoNotice.textContent = message;
+        demoNotice.style.display = 'block';
+        
+        setTimeout(() => {
+            demoNotice.style.opacity = '0.5';
             
-            // Scroll to section when indicator is clicked
-            indicators.forEach((indicator, index) => {
-                indicator.addEventListener('click', () => {
-                    const section = document.getElementById(sections[index]);
-                    if (section) {
-                        section.scrollIntoView({ behavior: 'smooth' });
-                    }
-                });
-            });
-
-            // Update active indicator on scroll
-            window.addEventListener('scroll', () => {
-                let currentSection = '';
-                
-                sections.forEach(sectionId => {
-                    const section = document.getElementById(sectionId);
-                    if (section) {
-                        const rect = section.getBoundingClientRect();
-                        if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
-                            currentSection = sectionId;
-                        }
-                    }
-                });
-                
-                indicators.forEach(indicator => {
-                    const section = indicator.getAttribute('data-section');
-                    if (currentSection.includes(section)) {
-                        indicator.classList.add('active');
-                    } else {
-                        indicator.classList.remove('active');
-                    }
-                });
-            });
-
-            // Initialize GSAP scroll animations for 3D model
-            if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
-                setup3DScrollAnimations();
-            }
-        }
-
-        function setup3DScrollAnimations() {
-            if (!window.model || !window.scene || !window.camera) {
-                console.log('Waiting for model to load...');
-                setTimeout(setup3DScrollAnimations, 500);
-                return;
-            }
-            
-            console.log('Setting up 3D scroll animations...');
-            
-            // Kill any existing ScrollTriggers
-            ScrollTrigger.getAll().forEach(trigger => trigger.kill());
-            
-            // Get the total scrollable height
-            const contentHeight = document.querySelector('.content-overlay').scrollHeight;
-            const windowHeight = window.innerHeight;
-            const scrollDistance = contentHeight - windowHeight;
-            
-            // Create a master timeline for scroll animations
-            const tl = gsap.timeline({
-                scrollTrigger: {
-                    trigger: '.content-overlay',
-                    start: 'top top',
-                    end: 'bottom bottom',
-                    scrub: 1,
-                    onUpdate: (self) => {
-                        const progress = self.progress;
-                        
-                        // 1. MODEL ROTATION (like index.html) - Only on scroll
-                        window.model.rotation.y = progress * Math.PI * 4; // 2 full rotations
-                        
-                        // 2. MODEL POSITION - Move left/right based on feature card position
-                        const sectionProgress = progress * 5; // 5 sections
-                        const sectionIndex = Math.floor(sectionProgress);
-                        
-                        // Determine which section we're in and position model accordingly
-                        switch(sectionIndex) {
-                            case 0: // Hero section - center
-                                gsap.to(window.model.position, {
-                                    x: 0,
-                                    duration: 0.5,
-                                    ease: "power2.out"
-                                });
-                                break;
-                            case 1: // Feature 1 (left card) - move right
-                                gsap.to(window.model.position, {
-                                    x: 3,
-                                    duration: 0.5,
-                                    ease: "power2.out"
-                                });
-                                break;
-                            case 2: // Feature 2 (right card) - move left
-                                gsap.to(window.model.position, {
-                                    x: -3,
-                                    duration: 0.5,
-                                    ease: "power2.out"
-                                });
-                                break;
-                            case 3: // Feature 3 (left card) - move right
-                                gsap.to(window.model.position, {
-                                    x: 3,
-                                    duration: 0.5,
-                                    ease: "power2.out"
-                                });
-                                break;
-                            case 4: // Feature 4 (right card) - move left
-                                gsap.to(window.model.position, {
-                                    x: -3,
-                                    duration: 0.5,
-                                    ease: "power2.out"
-                                });
-                                break;
-                        }
-                        
-                        // 3. CAMERA MOVEMENT - subtle zoom and vertical movement
-                        const cameraZ = 6 - (progress * 1.5); // Zoom in slightly as we scroll
-                        window.camera.position.z = Math.max(cameraZ, 4);
-                        
-                        const cameraY = 1.5 + Math.sin(progress * Math.PI) * 0.5;
-                        window.camera.position.y = cameraY;
-                        
-                        // 4. LIGHTING COLOR CHANGES - subtle transitions
-                        const colors = [
-                            0x0ea5e9, // Blue (brand color) - Hero
-                            0xef4444, // Red - Therapy
-                            0x10b981, // Green - Smart tech
-                            0x8b5cf6, // Purple - Design
-                            0xf59e0b  // Amber - Specs
-                        ];
-                        
-                        const currentColorIndex = Math.floor(sectionProgress);
-                        const nextColorIndex = (currentColorIndex + 1) % colors.length;
-                        const colorProgress = sectionProgress - currentColorIndex;
-                        
-                        if (currentColorIndex < colors.length) {
-                            // Update ambient light color
-                            window.scene.children.forEach(child => {
-                                if (child.isLight && child.type === 'AmbientLight') {
-                                    const currentColor = colors[currentColorIndex];
-                                    const nextColor = colors[nextColorIndex];
-                                    
-                                    const r1 = (currentColor >> 16) & 255;
-                                    const g1 = (currentColor >> 8) & 255;
-                                    const b1 = currentColor & 255;
-                                    
-                                    const r2 = (nextColor >> 16) & 255;
-                                    const g2 = (nextColor >> 8) & 255;
-                                    const b2 = nextColor & 255;
-                                    
-                                    const r = r1 + (r2 - r1) * colorProgress;
-                                    const g = g1 + (g2 - g1) * colorProgress;
-                                    const b = b1 + (b2 - b1) * colorProgress;
-                                    
-                                    child.color.r = r / 255;
-                                    child.color.g = g / 255;
-                                    child.color.b = b / 255;
-                                }
-                            });
-                        }
-                        
-                        // 5. MODEL SCALE - subtle pulsing
-                        const scale = 0.8 + Math.sin(progress * Math.PI * 8) * 0.05;
-                        window.model.scale.setScalar(scale);
-                        
-                        // 6. CAMERA LOOK AT - keep looking at model
-                        window.camera.lookAt(window.model.position);
-                    },
-                    onEnter: () => {
-                        console.log('Scroll animations started');
-                    },
-                    onLeave: () => {
-                        console.log('Scroll animations completed');
-                    }
-                }
-            });
-            
-            // Add section-specific triggers for more precise model positioning
-            const sections = [
-                { id: 'hero-section', x: 0 },
-                { id: 'feature1-section', x: 3 },    // Right (left card)
-                { id: 'feature2-section', x: -3 },   // Left (right card)
-                { id: 'feature3-section', x: 3 },    // Right (left card)
-                { id: 'feature4-section', x: -3 }    // Left (right card)
-            ];
-            
-            sections.forEach((section, index) => {
-                const element = document.getElementById(section.id);
-                if (element) {
-                    ScrollTrigger.create({
-                        trigger: element,
-                        start: 'top center',
-                        end: 'bottom center',
-                        onEnter: () => {
-                            // Smoothly move model to position
-                            gsap.to(window.model.position, {
-                                x: section.x,
-                                duration: 0.8,
-                                ease: "power2.out"
-                            });
-                        },
-                        onLeaveBack: () => {
-                            // When scrolling back up
-                            const prevSection = sections[Math.max(0, index - 1)];
-                            gsap.to(window.model.position, {
-                                x: prevSection.x,
-                                duration: 0.8,
-                                ease: "power2.out"
-                            });
-                        }
-                    });
-                }
-            });
-            
-            console.log('3D scroll animations setup complete');
-        }
-
-        // Update model positioning based on visible feature cards
-        function updateModelPosition() {
-            if (!window.model) return;
-            
-            // Get all feature sections
-            const featureSections = [
-                'feature1-section',
-                'feature2-section', 
-                'feature3-section',
-                'feature4-section'
-            ];
-            
-            // Find which section is most visible
-            let mostVisibleSection = null;
-            let maxVisibility = 0;
-            
-            featureSections.forEach(sectionId => {
-                const section = document.getElementById(sectionId);
-                if (section) {
-                    const rect = section.getBoundingClientRect();
-                    const visibility = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
-                    
-                    if (visibility > maxVisibility && visibility > window.innerHeight * 0.3) {
-                        maxVisibility = visibility;
-                        mostVisibleSection = sectionId;
-                    }
-                }
-            });
-            
-            // Position model based on which section is visible
-            if (mostVisibleSection) {
-                const featureContent = document.querySelector(`#${mostVisibleSection} .feature-content`);
-                if (featureContent) {
-                    const rect = featureContent.getBoundingClientRect();
-                    const isLeftCard = rect.left < window.innerWidth / 2;
-                    
-                    // Move model opposite to card position
-                    const targetX = isLeftCard ? 3 : -3; // Right for left cards, left for right cards
-                    
-                    gsap.to(window.model.position, {
-                        x: targetX,
-                        duration: 0.5,
-                        ease: "power2.out"
-                    });
-                }
-            }
-        }
+            setTimeout(() => {
+                demoNotice.style.display = 'none';
+            }, 3000);
+        }, 5000);
+    }
+}
     </script>
     <script src="main.js"></script>
 </body>
