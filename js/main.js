@@ -461,51 +461,64 @@ function centerModel() {
 function setupScrollAnimations() {
     if (!model) return;
     
-    console.log('Setting up scroll animations...');
+    console.log('Setting up scroll animations for sticky sections...');
     
     // Kill any existing triggers
     ScrollTrigger.getAll().forEach(trigger => trigger.kill());
     
-    // Create rotation animation
-    gsap.to(model.rotation, {
-        y: Math.PI * 2, // Full 360° rotation
-        ease: "none",
+    // Get total scrollable height
+    const totalHeight = document.querySelector('main').scrollHeight;
+    const viewportHeight = window.innerHeight;
+    
+    // Create master timeline for smooth transitions
+    const masterTL = gsap.timeline({
         scrollTrigger: {
-            trigger: ".content-sections",
+            trigger: "main",
             start: "top top",
-            end: "bottom bottom",
-            scrub: 1,
+            end: `+=${totalHeight - viewportHeight}`,
+            scrub: 0.5,
+            pin: false,
+            anticipatePin: 1,
             onUpdate: function(self) {
-                // Zoom effect based on scroll progress
-                const baseZoom = 4;
-                const zoomRange = 2;
-                const zoom = baseZoom - (self.progress * zoomRange);
-                camera.position.z = Math.max(zoom, 1.5); // Don't zoom too close
+                // Calculate which sticky section should be active
+                const sections = [
+                    { id: 'hero-sticky-content', range: [0, 0.2] },
+                    { id: 'feature1-sticky-content', range: [0.2, 0.4] },
+                    { id: 'feature2-sticky-content', range: [0.4, 0.6] },
+                    { id: 'feature3-sticky-content', range: [0.6, 0.8] },
+                    { id: 'feature4-sticky-content', range: [0.8, 1] }
+                ];
                 
-                // Highlight active section
-                const sections = document.querySelectorAll('.section');
-                const activeIndex = Math.floor(self.progress * sections.length);
-                
-                sections.forEach((section, index) => {
-                    const isActive = index === activeIndex;
-                    section.style.opacity = isActive ? '1' : '0.7';
-                    section.style.transform = isActive ? 'scale(1.02)' : 'scale(1)';
-                    section.style.transition = 'all 0.3s ease';
+                sections.forEach(section => {
+                    const element = document.getElementById(section.id);
+                    if (element) {
+                        if (self.progress >= section.range[0] && self.progress < section.range[1]) {
+                            element.classList.add('active');
+                        } else {
+                            element.classList.remove('active');
+                        }
+                    }
                 });
                 
-                // Add slight vertical movement
-                model.position.y = Math.sin(self.progress * Math.PI) * 0.2;
-            },
-            onEnter: function() {
-                console.log('Scroll animation started');
-            },
-            onLeave: function() {
-                console.log('Scroll animation completed');
+                // 3D model animation based on scroll
+                if (model) {
+                    // Smooth rotation
+                    model.rotation.y = self.progress * Math.PI * 2;
+                    
+                    // Zoom effect
+                    const baseZoom = 4;
+                    const zoomRange = 2.5;
+                    const zoom = baseZoom - (self.progress * zoomRange);
+                    camera.position.z = Math.max(zoom, 1.8);
+                    
+                    // Subtle floating movement
+                    model.position.y = Math.sin(self.progress * Math.PI * 2) * 0.2;
+                }
             }
         }
     });
     
-    console.log('Scroll animations ready');
+    console.log('Sticky scroll animations ready');
 }
 
 // Add this to your existing init() function
