@@ -940,33 +940,32 @@
             console.log('Section indicators initialized');
         }
 
-            // Update active indicator on scroll
-            function updateIndicators() {
-                let currentSection = '';
-                
-                sections.forEach(sectionId => {
-                    const section = document.getElementById(sectionId);
-                    if (section) {
-                        const rect = section.getBoundingClientRect();
-                        if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
-                            currentSection = sectionId;
-                        }
-                    }
-                });
-                
-                indicators.forEach(indicator => {
-                    const section = indicator.getAttribute('data-section');
-                    if (currentSection.includes(section)) {
-                        indicator.classList.add('active');
-                    } else {
-                        indicator.classList.remove('active');
-                    }
-                });
-            }
+        // Update active indicator on scroll
+        function updateIndicators() {
+            let currentSection = '';
             
-            window.addEventListener('scroll', updateIndicators);
-            updateIndicators(); // Initial update
+            sections.forEach(sectionId => {
+                const section = document.getElementById(sectionId);
+                if (section) {
+                    const rect = section.getBoundingClientRect();
+                    if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
+                        currentSection = sectionId;
+                    }
+                }
+            });
+            
+            indicators.forEach(indicator => {
+                const section = indicator.getAttribute('data-section');
+                if (currentSection.includes(section)) {
+                    indicator.classList.add('active');
+                } else {
+                    indicator.classList.remove('active');
+                }
+            });
         }
+        
+        window.addEventListener('scroll', updateIndicators);
+        updateIndicators(); // Initial update
 
         function setupContentScrollAnimations() {
             // Animation for feature content
