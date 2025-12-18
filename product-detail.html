@@ -28,20 +28,45 @@
             display: block;
         }
         
+        .content-sections {
+            position: relative;
+            z-index: 2;
+            padding-top: 100vh;
+        }
+        
         .content-overlay {
             position: relative;
             z-index: 10;
-            min-height: 500vh; /* Minimum height for 5 sections */
+            min-height: 100vh;
         }
         
-        /* Hide old content sections since we're using sticky sections */
-        .content-sections {
-            display: none;
+        .hero-section {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 20;
         }
         
-        /* Old section styles - keep for reference but they won't be used */
-        .hero-section, .feature-section {
-            display: none;
+        .feature-section {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            z-index: 20;
+            padding: 0 5%;
+        }
+        
+        .feature-content {
+            max-width: 600px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
         /* Header styles with hide/show on scroll */
@@ -244,63 +269,49 @@
             }
         }
         
-        /* Sticky Sections Effect */
-        .sticky-section {
-            position: relative;
-            height: 300vh; /* 3x viewport for scroll duration */
+        /* Alternative arrow animation */
+        .scroll-arrows {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
         }
-
-        .sticky-section + .sticky-section {
-            margin-top: -100vh; /* Overlap sections */
+        
+        .arrow {
+            width: 20px;
+            height: 20px;
+            border-right: 2px solid rgba(255, 255, 255, 0.8);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.8);
+            transform: rotate(45deg);
+            animation: arrowBounce 2s infinite;
         }
-
-        .sticky-content {
-            position: sticky;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 20;
-            opacity: 0;
-            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-            pointer-events: none;
-            width: 100%;
+        
+        .arrow:nth-child(2) {
+            animation-delay: 0.2s;
         }
-
-        .sticky-content.active {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translateY(-50%) scale(1);
+        
+        .arrow:nth-child(3) {
+            animation-delay: 0.4s;
         }
-
-        .sticky-content:not(.active) {
-            transform: translateY(-50%) scale(0.95);
+        
+        @keyframes arrowBounce {
+            0%, 20% {
+                opacity: 0;
+                transform: rotate(45deg) translateY(-10px);
+            }
+            40% {
+                opacity: 1;
+            }
+            80% {
+                opacity: 0;
+                transform: rotate(45deg) translateY(10px);
+            }
+            100% {
+                opacity: 0;
+                transform: rotate(45deg) translateY(10px);
+            }
         }
-
-        /* Feature content styling */
-        .feature-content {
-            max-width: 600px;
-            padding: 40px;
-            background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            margin: 0 auto;
-        }
-
-        .ml-auto {
-            margin-left: auto;
-            margin-right: 5%;
-        }
-
-        /* Hero content specific */
-        #hero-sticky-content .feature-content {
-            background: transparent;
-            backdrop-filter: none;
-            box-shadow: none;
-            border: none;
-            text-align: center;
-        }
-
+        
         /* Animation classes */
         .animate-on-scroll {
             opacity: 0;
@@ -315,18 +326,14 @@
         
         /* Mobile adjustments */
         @media (max-width: 768px) {
-            .sticky-content {
+            .feature-section {
                 padding: 0 20px;
+                justify-content: center;
             }
             
             .feature-content {
                 padding: 30px;
-                margin: 0 auto;
-                max-width: 90%;
-            }
-            
-            .ml-auto {
-                margin-right: auto;
+                margin: 0 20px;
             }
             
             .section-indicator {
@@ -362,13 +369,110 @@
             }
         }
 
+        /* Sticky Sections Effect */
+        .section-container {
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sticky-section {
+            position: relative;
+            height: 300vh; /* 3x viewport for scroll duration */
+        }
+
+        .sticky-content {
+            position: sticky;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .sticky-content.active {
+            opacity: 1;
+        }
+
+        /* Content spacing */
+        .sticky-section + .sticky-section {
+            margin-top: -100vh; /* Overlap sections */
+        }
+
+        /* Adjust the main content container */
+        .content-sections {
+            position: relative;
+            z-index: 2;
+            padding-top: 100vh;
+        }
+
+        /* Update feature sections */
+        .feature-section {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            z-index: 20;
+            padding: 0 5%;
+            pointer-events: none; /* Allow scrolling through */
+        }
+
+        .feature-content {
+            pointer-events: auto; /* Re-enable interactions for content */
+            max-width: 600px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Smooth transitions for sticky content */
+        .sticky-content {
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(-50%) scale(0.95);
+        }
+
+        .sticky-content.active {
+            transform: translateY(-50%) scale(1);
+            opacity: 1;
+        }
+
+        /* Fade between sections */
+        .sticky-section {
+            position: relative;
+        }
+
+        .sticky-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100vh;
+            background: linear-gradient(to bottom, 
+                transparent 0%,
+                rgba(0,0,0,0.1) 30%,
+                rgba(0,0,0,0.3) 50%,
+                rgba(0,0,0,0.1) 70%,
+                transparent 100%);
+            pointer-events: none;
+            z-index: 15;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .sticky-section.active::before {
+            opacity: 1;
+        }
+
         /* Ensure smooth scrolling */
         html {
             scroll-behavior: smooth;
         }
 
     </style>
-    
 </head>
 <body class="text-gray-900">
     <!-- Loader -->
@@ -637,7 +741,6 @@
     <script src="js/main.js"></script>
     
     <!-- Product page specific scripts -->
-    <!-- Product page specific scripts -->
     <script>
         // Product page specific functionality
         window.addEventListener('load', function() {
@@ -837,6 +940,55 @@
             console.log('Section indicators initialized');
         }
 
+            // Update active indicator on scroll
+            function updateIndicators() {
+                let currentSection = '';
+                
+                sections.forEach(sectionId => {
+                    const section = document.getElementById(sectionId);
+                    if (section) {
+                        const rect = section.getBoundingClientRect();
+                        if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
+                            currentSection = sectionId;
+                        }
+                    }
+                });
+                
+                indicators.forEach(indicator => {
+                    const section = indicator.getAttribute('data-section');
+                    if (currentSection.includes(section)) {
+                        indicator.classList.add('active');
+                    } else {
+                        indicator.classList.remove('active');
+                    }
+                });
+            }
+            
+            window.addEventListener('scroll', updateIndicators);
+            updateIndicators(); // Initial update
+        }
+
+        function setupContentScrollAnimations() {
+            // Animation for feature content
+            const observerOptions = {
+                threshold: 0.2,
+                rootMargin: '0px 0px -100px 0px'
+            };
+
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, observerOptions);
+
+            // Observe all animate-on-scroll elements
+            document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                observer.observe(el);
+            });
+        }
+
         function setupMobileMenu() {
             const mobileMenuBtn = document.getElementById('mobile-menu-btn');
             const mobileMenu = document.getElementById('mobile-menu');
@@ -884,10 +1036,10 @@
                             currentActiveSection = section.id;
                             
                             // Add parallax effect to 3D model
-                            if (window.model) {
+                            if (model) {
                                 const progress = (scrollPosition - sectionStart) / (sectionEnd - sectionStart);
-                                window.model.position.y = Math.sin(progress * Math.PI) * 0.3;
-                                window.model.rotation.y = progress * Math.PI * 0.5;
+                                model.position.y = Math.sin(progress * Math.PI) * 0.3;
+                                model.rotation.y = progress * Math.PI * 0.5;
                             }
                         } else {
                             element.classList.remove('active');
@@ -923,6 +1075,5 @@
         }
 
     </script>
-
 </body>
 </html>
