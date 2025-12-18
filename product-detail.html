@@ -421,177 +421,36 @@
     <!-- Main JS -->
     <!-- Main JS -->
     <script>
-// Enhanced scroll effects for product page
-        function setupProductScrollAnimations() {
-            // Animation for feature content
-            const observerOptions = {
-                threshold: 0.2,
-                rootMargin: '0px 0px -100px 0px'
-            };
-
-            const observer = new IntersectionObserver(function(entries) {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                    }
-                });
-            }, observerOptions);
-
-            // Observe all animate-on-scroll elements
-            document.querySelectorAll('.animate-on-scroll').forEach(el => {
-                observer.observe(el);
-            });
-
-            // Setup section indicator
-            const sections = ['hero-section', 'feature1-section', 'feature2-section', 'feature3-section', 'feature4-section'];
-            const indicators = document.querySelectorAll('.indicator-dot');
+        // Enhanced scroll effects for product page
+        // Extended main.js functionality for product page
+        window.addEventListener('load', function() {
+            console.log('Product page loaded, initializing 3D viewer...');
             
-            // Scroll to section when indicator is clicked
-            indicators.forEach((indicator, index) => {
-                indicator.addEventListener('click', () => {
-                    const section = document.getElementById(sections[index]);
-                    if (section) {
-                        section.scrollIntoView({ behavior: 'smooth' });
-                    }
-                });
-            });
-
-            // Update active indicator on scroll
-            window.addEventListener('scroll', () => {
-                let currentSection = '';
-                
-                sections.forEach(sectionId => {
-                    const section = document.getElementById(sectionId);
-                    if (section) {
-                        const rect = section.getBoundingClientRect();
-                        if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
-                            currentSection = sectionId;
-                        }
-                    }
-                });
-                
-                indicators.forEach(indicator => {
-                    const section = indicator.getAttribute('data-section');
-                    if (currentSection.includes(section)) {
-                        indicator.classList.add('active');
-                    } else {
-                        indicator.classList.remove('active');
-                    }
-                });
-            });
-
-            // Initialize GSAP scroll animations for 3D model
+            // Make sure GSAP plugins are registered
             if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
-                setup3DScrollAnimations();
-            }
-        }
-
-        function setup3DScrollAnimations() {
-            if (!window.model || !window.scene || !window.camera) {
-                console.log('Waiting for model to load...');
-                setTimeout(setup3DScrollAnimations, 500);
-                return;
+                gsap.registerPlugin(ScrollTrigger);
+                console.log('GSAP plugins registered');
             }
             
-            console.log('Setting up 3D scroll animations...');
+            // Initialize 3D viewer
+            initProductViewer();
             
-            // Kill any existing ScrollTriggers
-            ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+            // Initialize mobile menu
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const iconOpen = document.getElementById('icon-open');
+            const iconClose = document.getElementById('icon-close');
             
-            // Create a master timeline for scroll animations
-            const tl = gsap.timeline({
-                scrollTrigger: {
-                    trigger: '.content-overlay',
-                    start: 'top top',
-                    end: 'bottom bottom',
-                    scrub: 1,
-                    onUpdate: (self) => {
-                        const progress = self.progress;
-                        
-                        // 1. MODEL ROTATION - like index.html
-                        if (window.model) {
-                            window.model.rotation.y = progress * Math.PI * 4; // 2 full rotations
-                            
-                            // 2. MODEL POSITION - Move left/right based on scroll position
-                            // Map progress (0-1) to x position (-3 to 3)
-                            const sectionCount = 5;
-                            const sectionProgress = progress * sectionCount;
-                            const sectionIndex = Math.floor(sectionProgress);
-                            
-                            // Set target positions for each section
-                            const sectionPositions = [0, 3, -3, 3, -3]; // Center, Right, Left, Right, Left
-                            
-                            if (sectionIndex < sectionPositions.length) {
-                                // Smooth transition between sections
-                                const sectionFraction = sectionProgress - sectionIndex;
-                                const currentPos = sectionPositions[sectionIndex];
-                                const nextPos = sectionIndex + 1 < sectionPositions.length ? sectionPositions[sectionIndex + 1] : currentPos;
-                                const targetX = currentPos + (nextPos - currentPos) * sectionFraction;
-                                
-                                window.model.position.x = targetX;
-                            }
-                            
-                            // 3. CAMERA MOVEMENT - subtle zoom and vertical movement
-                            const cameraZ = 6 - (progress * 1.5); // Zoom in slightly as we scroll
-                            window.camera.position.z = Math.max(cameraZ, 4);
-                            
-                            const cameraY = 1.5 + Math.sin(progress * Math.PI) * 0.5;
-                            window.camera.position.y = cameraY;
-                            
-                            // 4. MODEL SCALE - subtle pulsing
-                            const scale = 0.8 + Math.sin(progress * Math.PI * 8) * 0.05;
-                            window.model.scale.setScalar(scale);
-                            
-                            // 5. Keep camera looking at model
-                            window.camera.lookAt(window.model.position);
-                        }
-                    }
-                }
-            });
-            
-            // Add section-specific triggers for more precise model positioning
-            const sections = [
-                { id: 'hero-section', x: 0 },
-                { id: 'feature1-section', x: 3 },    // Right (left card)
-                { id: 'feature2-section', x: -3 },   // Left (right card)
-                { id: 'feature3-section', x: 3 },    // Right (left card)
-                { id: 'feature4-section', x: -3 }    // Left (right card)
-            ];
-            
-            sections.forEach((section, index) => {
-                const element = document.getElementById(section.id);
-                if (element) {
-                    ScrollTrigger.create({
-                        trigger: element,
-                        start: 'top center',
-                        end: 'bottom center',
-                        onEnter: () => {
-                            if (window.model) {
-                                gsap.to(window.model.position, {
-                                    x: section.x,
-                                    duration: 0.8,
-                                    ease: "power2.out"
-                                });
-                            }
-                        },
-                        onLeaveBack: () => {
-                            if (window.model) {
-                                const prevSection = sections[Math.max(0, index - 1)];
-                                gsap.to(window.model.position, {
-                                    x: prevSection.x,
-                                    duration: 0.8,
-                                    ease: "power2.out"
-                                });
-                            }
-                        }
-                    });
-                }
-            });
-            
-            console.log('3D scroll animations setup complete');
-        }
+            if (mobileMenuBtn && mobileMenu) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                    iconOpen.classList.toggle('hidden');
+                    iconClose.classList.toggle('hidden');
+                });
+            }
+        });
 
-        // Also, update the initProductViewer function to ensure model is properly accessible
+        // Custom 3D viewer for product page
         function initProductViewer() {
             console.log('Initializing product 3D viewer...');
             
@@ -733,7 +592,7 @@
                     window.isModelLoaded = isModelLoaded;
                     window.renderer = renderer;
                     
-                    // Setup scroll animations
+                    // Setup scroll animations AFTER model is loaded
                     setupProductScrollAnimations();
                     
                     console.log('Model loaded and ready');
@@ -748,7 +607,7 @@
                     updateLoaderMessage('Local model not found. Creating demonstration model...');
                     
                     // Create fallback model
-                    createFallbackModel(scene);
+                    model = createFallbackModel(scene);
                     isModelLoaded = true;
                     
                     // Adjust camera for fallback model
@@ -839,13 +698,12 @@
                 group.add(mainRing);
                 group.add(padding);
                 group.add(controlUnit);
-                model = group;
-                scene.add(model);
+                scene.add(group);
                 
                 // Scale appropriately
-                model.scale.setScalar(0.8);
+                group.scale.setScalar(0.8);
                 
-                return model;
+                return group;
             }
             
             // Handle window resize
@@ -864,12 +722,9 @@
             function animate() {
                 requestAnimationFrame(animate);
                 
-                // Subtle floating motion when not scrolling
+                // Subtle floating motion
                 if (model && isModelLoaded) {
-                    // Only float if we're not actively scrolling
-                    if (!ScrollTrigger.isScrolling || !window.scrollAnimationActive) {
-                        model.position.y += Math.sin(Date.now() * 0.001) * 0.0005;
-                    }
+                    model.position.y += Math.sin(Date.now() * 0.001) * 0.0005;
                 }
                 
                 renderer.render(scene, camera);
@@ -877,7 +732,138 @@
             animate();
         }
 
-        // UI Helper functions (keep existing ones)
+        // Enhanced scroll effects for product page
+        function setupProductScrollAnimations() {
+            console.log('Setting up product scroll animations...');
+            
+            // Animation for feature content
+            const observerOptions = {
+                threshold: 0.2,
+                rootMargin: '0px 0px -100px 0px'
+            };
+
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, observerOptions);
+
+            // Observe all animate-on-scroll elements
+            document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                observer.observe(el);
+            });
+
+            // Setup section indicator
+            const sections = ['hero-section', 'feature1-section', 'feature2-section', 'feature3-section', 'feature4-section'];
+            const indicators = document.querySelectorAll('.indicator-dot');
+            
+            // Scroll to section when indicator is clicked
+            indicators.forEach((indicator, index) => {
+                indicator.addEventListener('click', () => {
+                    const section = document.getElementById(sections[index]);
+                    if (section) {
+                        section.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+
+            // Update active indicator on scroll
+            function updateIndicators() {
+                let currentSection = '';
+                
+                sections.forEach(sectionId => {
+                    const section = document.getElementById(sectionId);
+                    if (section) {
+                        const rect = section.getBoundingClientRect();
+                        if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
+                            currentSection = sectionId;
+                        }
+                    }
+                });
+                
+                indicators.forEach(indicator => {
+                    const section = indicator.getAttribute('data-section');
+                    if (currentSection.includes(section)) {
+                        indicator.classList.add('active');
+                    } else {
+                        indicator.classList.remove('active');
+                    }
+                });
+            }
+            
+            window.addEventListener('scroll', updateIndicators);
+            updateIndicators(); // Initial update
+
+            // Initialize GSAP scroll animations for 3D model
+            if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+                setup3DScrollAnimations();
+            } else {
+                console.warn('GSAP or ScrollTrigger not available for 3D animations');
+            }
+        }
+
+        function setup3DScrollAnimations() {
+            // Wait for model to be available
+            const checkModel = setInterval(() => {
+                if (window.model && window.scene && window.camera) {
+                    clearInterval(checkModel);
+                    console.log('Model ready, setting up 3D scroll animations...');
+                    start3DScrollAnimations();
+                }
+            }, 100);
+            
+            // Timeout after 5 seconds
+            setTimeout(() => {
+                clearInterval(checkModel);
+                console.warn('Timeout waiting for model');
+            }, 5000);
+        }
+
+        function start3DScrollAnimations() {
+            // Kill any existing ScrollTriggers
+            ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+            
+            // Create scroll animation timeline
+            const tl = gsap.timeline({
+                scrollTrigger: {
+                    trigger: '.content-overlay',
+                    start: 'top top',
+                    end: 'bottom bottom',
+                    scrub: true,
+                    onUpdate: function(self) {
+                        const progress = self.progress;
+                        
+                        // 1. MODEL ROTATION (like index.html) - Only on scroll
+                        window.model.rotation.y = progress * Math.PI * 4; // 2 full rotations
+                        
+                        // 2. MODEL POSITION - Move left/right based on feature card position
+                        const sectionProgress = progress * 5; // 5 sections
+                        const sectionIndex = Math.floor(sectionProgress);
+                        
+                        // Set positions for each section
+                        const sectionPositions = [0, 3, -3, 3, -3]; // Center, Right, Left, Right, Left
+                        
+                        if (sectionIndex < sectionPositions.length) {
+                            const targetX = sectionPositions[sectionIndex];
+                            window.model.position.x = targetX;
+                        }
+                        
+                        // 3. CAMERA MOVEMENT - subtle zoom
+                        const cameraZ = 6 - (progress * 1.5);
+                        window.camera.position.z = Math.max(cameraZ, 4);
+                        
+                        // 4. Keep camera looking at model
+                        window.camera.lookAt(window.model.position);
+                    }
+                }
+            });
+            
+            console.log('3D scroll animations setup complete');
+        }
+
+        // UI Helper functions
         function updateLoaderMessage(message) {
             const loader = document.getElementById('loader');
             if (loader) {
@@ -919,7 +905,7 @@
                     }, 3000);
                 }, 5000);
             }
-        }
+        }  
     </script>
     <script src="js/main.js"></script>
 </body>
