@@ -241,9 +241,17 @@ function loadCDNModel() {
             showDemoNotice('Using demonstration model: ' + selectedModel.name);
         },
         function(xhr) {
-            const percent = (xhr.loaded / xhr.total) * 100;
-            updateProgressBar(percent);
-            updateLoaderMessage(`Loading demo: ${Math.round(percent)}%`);
+            // FIXED: Handle cases where xhr.total is 0 or unknown
+            if (xhr.total && xhr.total > 0) {
+                const percent = (xhr.loaded / xhr.total) * 100;
+                updateProgressBar(percent);
+                updateLoaderMessage(`Loading demo: ${Math.round(percent)}%`);
+            } else {
+                // If total is unknown, show loaded bytes
+                const loadedMB = (xhr.loaded / 1024 / 1024).toFixed(1);
+                updateProgressBar((xhr.loaded / (1024 * 1024 * 10)) * 100); // Estimate 10MB max
+                updateLoaderMessage(`Loading demo: ${loadedMB} MB`);
+            }
         },
         function(error) {
             console.error('Failed to load CDN model:', error);
@@ -293,9 +301,17 @@ function loadModel(modelPath) {
             setupScrollAnimations();
         },
         function(xhr) {
-            const percent = (xhr.loaded / xhr.total) * 100;
-            updateProgressBar(percent);
-            updateLoaderMessage(`Loading model: ${Math.round(percent)}%`);
+            // FIXED: Handle cases where xhr.total is 0 or unknown
+            if (xhr.total && xhr.total > 0) {
+                const percent = (xhr.loaded / xhr.total) * 100;
+                updateProgressBar(percent);
+                updateLoaderMessage(`Loading model: ${Math.round(percent)}%`);
+            } else {
+                // If total is unknown, show loaded bytes
+                const loadedMB = (xhr.loaded / 1024 / 1024).toFixed(1);
+                updateProgressBar((xhr.loaded / (1024 * 1024 * 5)) * 100); // Estimate 5MB max
+                updateLoaderMessage(`Loading model: ${loadedMB} MB`);
+            }
         },
         function(error) {
             console.error('Failed to load model:', error);
@@ -442,8 +458,8 @@ function centerModel() {
     
     console.log('Centered model size:', maxSize.toFixed(2));
     
-    // Balanced camera distance - not too close, not too far
-    const cameraDistance = Math.max(maxSize * 1.8, 3.5);
+    // Fixed camera distance - no zooming during scroll
+    const cameraDistance = 5; // Fixed distance
     camera.position.z = cameraDistance;
     
     // Slight elevation for better view
@@ -451,7 +467,7 @@ function centerModel() {
     
     camera.lookAt(0, 0, 0);
     
-    console.log('Camera positioned at:', {
+    console.log('Camera positioned at fixed distance:', {
         x: camera.position.x.toFixed(2),
         y: camera.position.y.toFixed(2),
         z: camera.position.z.toFixed(2)
@@ -462,6 +478,9 @@ function setupScrollAnimations() {
     if (!model) return;
     
     console.log('Setting up scroll animations for sticky sections...');
+    
+    // Store initial model scale
+    const initialModelScale = currentModelScale;
     
     // Kill any existing triggers
     ScrollTrigger.getAll().forEach(trigger => trigger.kill());
@@ -502,17 +521,17 @@ function setupScrollAnimations() {
                 
                 // 3D model animation based on scroll
                 if (model) {
-                    // Smooth rotation
+                    // Smooth rotation only - NO ZOOMING
                     model.rotation.y = self.progress * Math.PI * 2;
                     
-                    // Zoom effect
-                    const baseZoom = 4;
-                    const zoomRange = 2.5;
-                    const zoom = baseZoom - (self.progress * zoomRange);
-                    camera.position.z = Math.max(zoom, 1.8);
+                    // Keep model at fixed scale (no zoom effect)
+                    // Remove any scaling logic
                     
                     // Subtle floating movement
-                    model.position.y = Math.sin(self.progress * Math.PI * 2) * 0.2;
+                    model.position.y = Math.sin(self.progress * Math.PI * 2) * 0.1;
+                    
+                    // Ensure model scale stays fixed
+                    model.scale.set(initialModelScale, initialModelScale, initialModelScale);
                 }
             }
         }
@@ -614,7 +633,9 @@ function updateLoaderMessage(message) {
 function updateProgressBar(percent) {
     const progressBar = document.querySelector('.progress-bar');
     if (progressBar) {
-        progressBar.style.width = `${percent}%`;
+        // Ensure percent is between 0 and 100
+        const clampedPercent = Math.min(100, Math.max(0, percent));
+        progressBar.style.width = `${clampedPercent}%`;
     }
 }
 

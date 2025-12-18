@@ -324,6 +324,39 @@
             transform: translateY(0);
         }
         
+        /* FIXED: Text visibility issues */
+        .feature-content strong {
+            color: #1e40af !important;
+            font-weight: 700;
+        }
+        
+        .feature-content p {
+            color: #374151 !important;
+        }
+        
+        .feature-content .text-gray-700 {
+            color: #374151 !important;
+        }
+        
+        .feature-content h2,
+        .feature-content h3,
+        .feature-content li,
+        .feature-content span:not(.bg-brand-100) {
+            color: #1f2937 !important;
+        }
+        
+        .feature-content * {
+            color: inherit !important;
+        }
+        
+        .feature-content {
+            color: #1f2937 !important;
+        }
+        
+        .bg-gradient-to-r.from-brand-500.to-brand-600 * {
+            color: white !important;
+        }
+        
         /* Mobile adjustments */
         @media (max-width: 768px) {
             .feature-section {
@@ -378,7 +411,7 @@
 
         .sticky-section {
             position: relative;
-            height: 300vh; /* 3x viewport for scroll duration */
+            height: 500vh; /* INCREASED: 5x viewport for longer scroll duration */
         }
 
         .sticky-content {
@@ -414,14 +447,14 @@
             position: relative;
             z-index: 20;
             padding: 0 5%;
-            pointer-events: none; /* Allow scrolling through */
+            pointer-events: none;
         }
 
         .feature-content {
-            pointer-events: auto; /* Re-enable interactions for content */
+            pointer-events: auto;
             max-width: 600px;
             padding: 40px;
-            background: rgba(255, 255, 255, 0.92);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
@@ -439,32 +472,111 @@
             opacity: 1;
         }
 
-        /* Fade between sections */
-        .sticky-section {
-            position: relative;
-        }
-
-        .sticky-section::before {
+        /* NEW: Gradient backgrounds for each section */
+        #hero-sticky-section::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            height: 100vh;
-            background: linear-gradient(to bottom, 
-                transparent 0%,
-                rgba(0,0,0,0.1) 30%,
-                rgba(0,0,0,0.3) 50%,
-                rgba(0,0,0,0.1) 70%,
-                transparent 100%);
-            pointer-events: none;
-            z-index: 15;
-            opacity: 0;
-            transition: opacity 0.5s ease;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            opacity: 0.1;
+            z-index: 1;
         }
 
-        .sticky-section.active::before {
-            opacity: 1;
+        #feature1-sticky-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            opacity: 0.08;
+            z-index: 1;
+        }
+
+        #feature2-sticky-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            opacity: 0.08;
+            z-index: 1;
+        }
+
+        #feature3-sticky-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            opacity: 0.08;
+            z-index: 1;
+        }
+
+        #feature4-sticky-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            opacity: 0.08;
+            z-index: 1;
+        }
+
+        /* NEW: Colorful feature content borders */
+        #feature1-sticky-content .feature-content {
+            background: rgba(255, 255, 255, 0.97);
+            border-left: 4px solid #f5576c;
+            box-shadow: 0 25px 70px rgba(245, 87, 108, 0.15);
+        }
+
+        #feature2-sticky-content .feature-content {
+            background: rgba(255, 255, 255, 0.97);
+            border-left: 4px solid #4facfe;
+            box-shadow: 0 25px 70px rgba(79, 172, 254, 0.15);
+        }
+
+        #feature3-sticky-content .feature-content {
+            background: rgba(255, 255, 255, 0.97);
+            border-left: 4px solid #43e97b;
+            box-shadow: 0 25px 70px rgba(67, 233, 123, 0.15);
+        }
+
+        #feature4-sticky-content .feature-content {
+            background: rgba(255, 255, 255, 0.97);
+            border-left: 4px solid #fa709a;
+            box-shadow: 0 25px 70px rgba(250, 112, 154, 0.15);
+        }
+
+        /* NEW: Update section indicator colors */
+        #feature1-sticky-section.active ~ .section-indicator .indicator-dot[data-section="feature1"] {
+            background: #f5576c !important;
+            box-shadow: 0 0 20px rgba(245, 87, 108, 0.5);
+        }
+
+        #feature2-sticky-section.active ~ .section-indicator .indicator-dot[data-section="feature2"] {
+            background: #4facfe !important;
+            box-shadow: 0 0 20px rgba(79, 172, 254, 0.5);
+        }
+
+        #feature3-sticky-section.active ~ .section-indicator .indicator-dot[data-section="feature3"] {
+            background: #43e97b !important;
+            box-shadow: 0 0 20px rgba(67, 233, 123, 0.5);
+        }
+
+        #feature4-sticky-section.active ~ .section-indicator .indicator-dot[data-section="feature4"] {
+            background: #fa709a !important;
+            box-shadow: 0 0 20px rgba(250, 112, 154, 0.5);
         }
 
         /* Ensure smooth scrolling */
@@ -749,7 +861,7 @@
             // Setup scroll hint functionality
             setupScrollHint();
             
-            // Setup header hide/show on scroll
+            // Setup header hide/show on scroll - IMPROVED VERSION
             setupHeaderScrollBehavior();
             
             // Setup section indicators FIRST
@@ -828,11 +940,11 @@
             console.log('Scroll hint functionality initialized');
         }
 
+        // FIXED: Improved header scroll behavior
         function setupHeaderScrollBehavior() {
             const header = document.getElementById('main-header');
             let lastScrollTop = 0;
-            const scrollThreshold = 100; // Scroll down 100px before hiding
-            const hideThreshold = 50; // Scroll up 50px to show again
+            const scrollThreshold = 50; // Reduced from 100 to 50
             
             if (!header) return;
             
@@ -842,20 +954,23 @@
                 // Check if we're at the very top of the page
                 if (currentScroll <= 0) {
                     header.classList.remove('hidden');
+                    lastScrollTop = 0;
                     return;
                 }
                 
-                // Scrolling down
+                // Scrolling down - hide header
                 if (currentScroll > lastScrollTop && currentScroll > scrollThreshold) {
                     header.classList.add('hidden');
                 } 
-                // Scrolling up
-                else if (currentScroll < lastScrollTop - hideThreshold) {
+                // Scrolling up - show header
+                else if (currentScroll < lastScrollTop) {
                     header.classList.remove('hidden');
                 }
                 
                 lastScrollTop = currentScroll;
             }, { passive: true });
+            
+            console.log('Header scroll behavior initialized');
         }
 
         function setupSectionIndicators() {
@@ -940,34 +1055,6 @@
             console.log('Section indicators initialized');
         }
 
-            // Update active indicator on scroll
-            function updateIndicators() {
-                let currentSection = '';
-                
-                sections.forEach(sectionId => {
-                    const section = document.getElementById(sectionId);
-                    if (section) {
-                        const rect = section.getBoundingClientRect();
-                        if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
-                            currentSection = sectionId;
-                        }
-                    }
-                });
-                
-                indicators.forEach(indicator => {
-                    const section = indicator.getAttribute('data-section');
-                    if (currentSection.includes(section)) {
-                        indicator.classList.add('active');
-                    } else {
-                        indicator.classList.remove('active');
-                    }
-                });
-            }
-            
-            window.addEventListener('scroll', updateIndicators);
-            updateIndicators(); // Initial update
-        }
-
         function setupContentScrollAnimations() {
             // Animation for feature content
             const observerOptions = {
@@ -1034,13 +1121,6 @@
                         if (scrollPosition >= sectionStart && scrollPosition < sectionEnd) {
                             element.classList.add('active');
                             currentActiveSection = section.id;
-                            
-                            // Add parallax effect to 3D model
-                            if (model) {
-                                const progress = (scrollPosition - sectionStart) / (sectionEnd - sectionStart);
-                                model.position.y = Math.sin(progress * Math.PI) * 0.3;
-                                model.rotation.y = progress * Math.PI * 0.5;
-                            }
                         } else {
                             element.classList.remove('active');
                         }
