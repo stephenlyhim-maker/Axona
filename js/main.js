@@ -209,6 +209,7 @@ function loadCDNModel() {
         function(gltf) {
             console.log(`✅ ${selectedModel.name} loaded successfully!`);
             model = gltf.scene;
+            window.model = model; // Make model globally accessible
             
             // Apply manual scale first
             if (selectedModel.manualScale) {
@@ -269,6 +270,7 @@ function loadModel(modelPath) {
         function(gltf) {
             console.log('✅ Model loaded successfully!');
             model = gltf.scene;
+            window.model = model; // Make model globally accessible
             
             // Auto-scale the model based on its size
             autoScaleModel(model);
@@ -410,6 +412,7 @@ function createFallbackModel() {
     group.add(button2);
     
     model = group;
+    window.model = model; // Make model globally accessible
     scene.add(model);
     isModelLoaded = true;
     
