@@ -182,6 +182,136 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
+        /* Scroll hint animation */
+        .scroll-hint {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%) translateY(0);
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+        
+        .scroll-hint.visible {
+            opacity: 1;
+        }
+        
+        .scroll-hint-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .scroll-hint-text {
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            opacity: 0.8;
+            letter-spacing: 0.5px;
+        }
+        
+        .mouse {
+            width: 30px;
+            height: 50px;
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            border-radius: 15px;
+            position: relative;
+        }
+        
+        .mouse::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            animation: scrollWheel 2s infinite;
+        }
+        
+        .mouse::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.7);
+            animation: scrollLine 2s infinite;
+        }
+        
+        @keyframes scrollWheel {
+            0%, 20% {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+            50%, 100% {
+                transform: translateX(-50%) translateY(15px);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes scrollLine {
+            0%, 20% {
+                height: 10px;
+                opacity: 0.7;
+            }
+            50%, 100% {
+                height: 20px;
+                opacity: 0;
+            }
+        }
+        
+        /* Alternative arrow animation */
+        .scroll-arrows {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .arrow {
+            width: 20px;
+            height: 20px;
+            border-right: 2px solid rgba(255, 255, 255, 0.8);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.8);
+            transform: rotate(45deg);
+            animation: arrowBounce 2s infinite;
+        }
+        
+        .arrow:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .arrow:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes arrowBounce {
+            0%, 20% {
+                opacity: 0;
+                transform: rotate(45deg) translateY(-10px);
+            }
+            40% {
+                opacity: 1;
+            }
+            80% {
+                opacity: 0;
+                transform: rotate(45deg) translateY(10px);
+            }
+            100% {
+                opacity: 0;
+                transform: rotate(45deg) translateY(10px);
+            }
+        }
+        
         /* Animation classes */
         .animate-on-scroll {
             opacity: 0;
@@ -217,6 +347,26 @@
             header {
                 background: rgba(255, 255, 255, 0.98);
             }
+            
+            .scroll-hint {
+                bottom: 30px;
+            }
+            
+            .mouse {
+                width: 25px;
+                height: 40px;
+            }
+            
+            .scroll-hint-text {
+                font-size: 12px;
+            }
+        }
+        
+        /* Hide scroll hint on very small screens */
+        @media (max-height: 500px) {
+            .scroll-hint {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -235,6 +385,26 @@
     <!-- Demo Notice -->
     <div class="demo-notice" id="demo-notice">
         Interactive 3D Experience
+    </div>
+    
+    <!-- Scroll Hint -->
+    <div class="scroll-hint" id="scroll-hint">
+        <div class="scroll-hint-content">
+            <!-- Choose one style: -->
+            <!-- Style 1: Mouse animation -->
+            <div class="mouse"></div>
+            <div class="scroll-hint-text">Scroll to explore</div>
+            
+            <!-- Style 2: Arrow animation (uncomment to use) -->
+            <!--
+            <div class="scroll-arrows">
+                <div class="arrow"></div>
+                <div class="arrow"></div>
+                <div class="arrow"></div>
+            </div>
+            <div class="scroll-hint-text">Discover more</div>
+            -->
+        </div>
     </div>
     
     <!-- Header -->
@@ -465,6 +635,9 @@
         window.addEventListener('load', function() {
             console.log('Product page loaded');
             
+            // Setup scroll hint functionality
+            setupScrollHint();
+            
             // Setup header hide/show on scroll
             setupHeaderScrollBehavior();
             
@@ -477,6 +650,72 @@
             // Setup mobile menu
             setupMobileMenu();
         });
+
+        function setupScrollHint() {
+            const scrollHint = document.getElementById('scroll-hint');
+            if (!scrollHint) return;
+            
+            let idleTimer = null;
+            const showDelay = 3000; // 3 seconds
+            const scrollThreshold = 100; // Minimum scroll before hiding permanently
+            
+            function showScrollHint() {
+                if (window.scrollY < scrollThreshold) {
+                    scrollHint.classList.add('visible');
+                }
+            }
+            
+            function hideScrollHint() {
+                scrollHint.classList.remove('visible');
+            }
+            
+            function startIdleTimer() {
+                clearTimeout(idleTimer);
+                idleTimer = setTimeout(showScrollHint, showDelay);
+            }
+            
+            function resetIdleTimer() {
+                clearTimeout(idleTimer);
+                hideScrollHint();
+                startIdleTimer();
+            }
+            
+            // Initial setup
+            hideScrollHint();
+            startIdleTimer();
+            
+            // Events that should reset the timer
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > scrollThreshold) {
+                    // User has scrolled enough, hide hint permanently
+                    hideScrollHint();
+                    clearTimeout(idleTimer);
+                } else {
+                    // User scrolled a little but still near top, reset timer
+                    resetIdleTimer();
+                }
+            }, { passive: true });
+            
+            window.addEventListener('mousemove', resetIdleTimer, { passive: true });
+            window.addEventListener('touchstart', resetIdleTimer, { passive: true });
+            window.addEventListener('keydown', resetIdleTimer, { passive: true });
+            window.addEventListener('click', resetIdleTimer, { passive: true });
+            
+            // Also hide hint when user interacts with the model or indicators
+            document.querySelectorAll('.indicator-dot, .model-container, button').forEach(el => {
+                el.addEventListener('click', resetIdleTimer, { passive: true });
+            });
+            
+            // Optional: Hide hint when page loses focus
+            window.addEventListener('blur', function() {
+                clearTimeout(idleTimer);
+                hideScrollHint();
+            });
+            
+            window.addEventListener('focus', startIdleTimer);
+            
+            console.log('Scroll hint functionality initialized');
+        }
 
         function setupHeaderScrollBehavior() {
             const header = document.getElementById('main-header');
