@@ -82,7 +82,15 @@ function init() {
         antialias: true,
         alpha: true
     });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    
+    // Set initial size based on device
+    if (window.innerWidth <= 768 || window.innerHeight > window.innerWidth) {
+        console.log('Initial mobile/vertical detection: Setting smaller canvas');
+        renderer.setSize(window.innerWidth, window.innerHeight * 0.9); // Slightly smaller on mobile
+    } else {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+    
     renderer.shadowMap.enabled = true;
     
     // Add lighting
@@ -94,12 +102,16 @@ function init() {
     // Try to load model
     tryLoadModel();
     
-    // Handle window resize
+    // Handle window resize - including orientation changes
     window.addEventListener('resize', onWindowResize);
+    
+    // Also listen for orientation changes specifically
+    window.addEventListener('orientationchange', function() {
+        setTimeout(onWindowResize, 100); // Wait for orientation to complete
+    });
     
     // Start animation
     animate();
-
     quickBandingFixes();
 }
 
@@ -334,7 +346,7 @@ function loadModel(modelPath) {
 function autoScaleModel(model) {
     if (!model) return;
     
-    console.log('Scaling model to 5% of original size...');
+    console.log('Scaling model based on device...');
     
     // Get model bounding box to determine original size
     const box = new THREE.Box3().setFromObject(model);
@@ -350,12 +362,24 @@ function autoScaleModel(model) {
         max: maxDimension.toFixed(2)
     });
     
-    // FIXED: Correct 5% scale (was 0.02 = 2%)
-    const scaleFactor = 0.05; // ACTUAL 5% of original
+    // Determine scale factor based on device
+    let scaleFactor;
     
-    console.log('Applying 5% scale factor:', scaleFactor);
+    // Check if mobile or vertical screen
+    const isMobile = window.innerWidth <= 768;
+    const isVertical = window.innerHeight > window.innerWidth;
     
-    // Apply the 5% scale
+    if (isMobile || isVertical) {
+        scaleFactor = 0.02; // 2% for mobile/vertical
+        console.log('Mobile/vertical detected: Applying 2% scale');
+    } else {
+        scaleFactor = 0.05; // 5% for desktop
+        console.log('Desktop detected: Applying 5% scale');
+    }
+    
+    console.log('Applying scale factor:', scaleFactor);
+    
+    // Apply the scale
     model.scale.set(scaleFactor, scaleFactor, scaleFactor);
     
     // Store the scale values
@@ -367,14 +391,14 @@ function autoScaleModel(model) {
     box.getSize(size);
     const newMaxDimension = Math.max(size.x, size.y, size.z);
     
-    console.log('After 5% scaling - new dimensions:', {
+    console.log('After scaling - new dimensions:', {
         width: size.x.toFixed(2),
         height: size.y.toFixed(2),
         depth: size.z.toFixed(2),
         max: newMaxDimension.toFixed(2)
     });
     
-    console.log('Model reduced to 5% of original size');
+    console.log('Model scaled to', scaleFactor * 100, '% of original size');
     
     return scaleFactor;
 }
@@ -430,19 +454,38 @@ function createFallbackModel() {
     scene.add(model);
     isModelLoaded = true;
     
-    // Apply auto-scaling to fallback model as well
-    autoScaleModel(model);
+    // Apply device-specific scaling to fallback model
+    adjustModelScaleForDevice();
     centerModel();
     
-    console.log('Fallback model created and auto-scaled');
+    console.log('Fallback model created and scaled');
+}
+
+// Helper function for device-specific scaling
+function adjustModelScaleForDevice() {
+    if (!model) return;
+    
+    const isMobile = window.innerWidth <= 768;
+    const isVertical = window.innerHeight > window.innerWidth;
+    
+    let scaleFactor;
+    if (isMobile || isVertical) {
+        scaleFactor = 0.02; // 2% for mobile/vertical
+    } else {
+        scaleFactor = 0.05; // 5% for desktop
+    }
+    
+    model.scale.set(scaleFactor, scaleFactor, scaleFactor);
+    originalModelScale = scaleFactor;
+    currentModelScale = scaleFactor;
 }
 
 function centerModel() {
     if (!model) return;
     
-    console.log('Centering model (balanced)...');
+    console.log('Centering model...');
     
-    // FIXED: Update world matrix before calculating bounding box
+    // Update world matrix before calculating bounding box
     model.updateMatrixWorld(true);
     
     // Get bounding box
@@ -462,16 +505,32 @@ function centerModel() {
     
     console.log('Centered model size:', maxSize.toFixed(2));
     
-    // Fixed camera distance - no zooming during scroll
-    const cameraDistance = 5; // Fixed distance
+    // Adjust camera distance based on device
+    const isMobile = window.innerWidth <= 768;
+    const isVertical = window.innerHeight > window.innerWidth;
+    
+    let cameraDistance;
+    if (isMobile || isVertical) {
+        cameraDistance = 4; // Closer for mobile/vertical
+    } else {
+        cameraDistance = 5; // Normal for desktop
+    }
+    
     camera.position.z = cameraDistance;
     
     // Slight elevation for better view
     camera.position.y = maxSize * 0.2;
     
+    // Adjust camera angle for mobile
+    if (isMobile || isVertical) {
+        camera.position.x = maxSize * 0.3; // Slight angle for mobile
+    } else {
+        camera.position.x = 0; // Centered for desktop
+    }
+    
     camera.lookAt(0, 0, 0);
     
-    console.log('Camera positioned at fixed distance:', {
+    console.log('Camera positioned at:', {
         x: camera.position.x.toFixed(2),
         y: camera.position.y.toFixed(2),
         z: camera.position.z.toFixed(2)
@@ -622,6 +681,38 @@ function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    
+    // Rescale model if orientation changes
+    if (model && isModelLoaded) {
+        rescaleModelForDevice();
+    }
+}
+
+// Add new function to rescale model on orientation change
+function rescaleModelForDevice() {
+    if (!model) return;
+    
+    const isMobile = window.innerWidth <= 768;
+    const isVertical = window.innerHeight > window.innerWidth;
+    
+    let targetScale;
+    if (isMobile || isVertical) {
+        targetScale = 0.02; // 2% for mobile/vertical
+    } else {
+        targetScale = 0.05; // 5% for desktop
+    }
+    
+    // Only rescale if different from current scale
+    if (Math.abs(currentModelScale - targetScale) > 0.001) {
+        console.log('Device orientation changed, rescaling to:', targetScale);
+        
+        currentModelScale = targetScale;
+        model.scale.set(targetScale, targetScale, targetScale);
+        originalModelScale = targetScale;
+        
+        // Re-center after scaling
+        centerModel();
+    }
 }
 
 function animate() {

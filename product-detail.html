@@ -584,6 +584,33 @@
             scroll-behavior: smooth;
         }
 
+        /* Mobile-specific model adjustments */
+        @media (max-width: 768px) or (orientation: portrait) {
+            .model-container {
+                /* Slightly reduce canvas size on mobile */
+                height: 85vh;
+            }
+            
+            #model-canvas {
+                /* Optimize for mobile performance */
+                image-rendering: -webkit-optimize-contrast;
+                image-rendering: crisp-edges;
+            }
+            
+            /* Adjust section indicator position for mobile */
+            .section-indicator {
+                right: 15px;
+                gap: 12px;
+            }
+            
+            /* Adjust content positioning */
+            .feature-content {
+                max-width: 90%;
+                padding: 25px;
+                margin: 0 auto;
+            }
+        }
+
     </style>
 </head>
 <body class="text-gray-900">
