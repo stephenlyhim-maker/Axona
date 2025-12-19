@@ -861,14 +861,11 @@
             // Setup scroll hint functionality
             setupScrollHint();
             
-            // Setup header hide/show on scroll - IMPROVED VERSION
+            // Setup header hide/show on scroll
             setupHeaderScrollBehavior();
             
-            // Setup section indicators FIRST
+            // Setup section indicators (click handlers only)
             setupSectionIndicators();
-            
-            // Setup sticky sections SECOND (needs updateIndicators)
-            setupStickySections();
             
             // Setup mobile menu
             setupMobileMenu();
@@ -974,85 +971,54 @@
         }
 
         function setupSectionIndicators() {
-            const sections = ['hero-sticky-section', 'feature1-sticky-section', 'feature2-sticky-section', 'feature3-sticky-section', 'feature4-sticky-section'];
             const indicators = document.querySelectorAll('.indicator-dot');
-            
-            // Update active indicator function (make it accessible globally)
-            window.updateIndicators = function() {
-                let currentSection = '';
-                const scrollPosition = window.scrollY;
-                const viewportHeight = window.innerHeight;
-                
-                // Calculate which section is currently in view
-                sections.forEach(sectionId => {
-                    const section = document.getElementById(sectionId);
-                    if (section) {
-                        const rect = section.getBoundingClientRect();
-                        const sectionTop = scrollPosition + rect.top;
-                        const sectionBottom = scrollPosition + rect.bottom;
-                        
-                        // Check if section is in the middle third of viewport
-                        if (sectionTop <= scrollPosition + (viewportHeight * 0.6) && 
-                            sectionBottom >= scrollPosition + (viewportHeight * 0.4)) {
-                            currentSection = sectionId;
-                        }
-                    }
-                });
-                
-                // Update indicator dots
-                indicators.forEach(indicator => {
-                    const sectionName = indicator.getAttribute('data-section');
-                    const sectionId = sectionName === 'hero' ? 'hero-sticky-section' : 
-                                    sectionName === 'feature1' ? 'feature1-sticky-section' :
-                                    sectionName === 'feature2' ? 'feature2-sticky-section' :
-                                    sectionName === 'feature3' ? 'feature3-sticky-section' :
-                                    sectionName === 'feature4' ? 'feature4-sticky-section' : '';
-                    
-                    if (currentSection === sectionId) {
-                        indicator.classList.add('active');
-                    } else {
-                        indicator.classList.remove('active');
-                    }
-                });
-            };
             
             // Scroll to section when indicator is clicked
             indicators.forEach((indicator, index) => {
                 indicator.addEventListener('click', () => {
-                    const sectionId = sections[index];
-                    const section = document.getElementById(sectionId);
-                    if (section) {
-                        // Calculate position to scroll to (middle of section)
-                        const sectionRect = section.getBoundingClientRect();
-                        const targetScroll = window.scrollY + sectionRect.top - (window.innerHeight / 3);
+                    // Use the global function from main.js
+                    if (typeof scrollToSection === 'function') {
+                        scrollToSection(index);
+                    } else {
+                        // Fallback to native scrolling
+                        const sections = [
+                            'hero-sticky-section',
+                            'feature1-sticky-section', 
+                            'feature2-sticky-section',
+                            'feature3-sticky-section',
+                            'feature4-sticky-section'
+                        ];
                         
-                        window.scrollTo({
-                            top: Math.max(0, targetScroll),
-                            behavior: 'smooth'
-                        });
-                        
-                        // Show header briefly when clicking indicator
-                        const header = document.getElementById('main-header');
-                        if (header) {
-                            header.classList.remove('hidden');
+                        const sectionId = sections[index];
+                        const section = document.getElementById(sectionId);
+                        if (section) {
+                            const sectionRect = section.getBoundingClientRect();
+                            const targetScroll = window.scrollY + sectionRect.top - (window.innerHeight / 3);
                             
-                            // Re-hide after 3 seconds if user continues scrolling
-                            setTimeout(() => {
-                                const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
-                                if (currentScroll > 100) {
-                                    header.classList.add('hidden');
-                                }
-                            }, 3000);
+                            window.scrollTo({
+                                top: Math.max(0, targetScroll),
+                                behavior: 'smooth'
+                            });
                         }
+                    }
+                    
+                    // Show header briefly when clicking indicator
+                    const header = document.getElementById('main-header');
+                    if (header) {
+                        header.classList.remove('hidden');
+                        
+                        // Re-hide after 3 seconds if user continues scrolling
+                        setTimeout(() => {
+                            const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+                            if (currentScroll > 100) {
+                                header.classList.add('hidden');
+                            }
+                        }, 3000);
                     }
                 });
             });
 
-            // Initial setup
-            window.updateIndicators();
-            window.addEventListener('scroll', window.updateIndicators);
-            
-            console.log('Section indicators initialized');
+            console.log('Section indicators initialized (click handlers only)');
         }
 
         function setupContentScrollAnimations() {
@@ -1095,63 +1061,6 @@
                     }
                 });
             }
-        }
-
-        function setupStickySections() {
-            const sections = [
-                { id: 'hero-sticky-content', start: 0, end: 300 },
-                { id: 'feature1-sticky-content', start: 300, end: 600 },
-                { id: 'feature2-sticky-content', start: 600, end: 900 },
-                { id: 'feature3-sticky-content', start: 900, end: 1200 },
-                { id: 'feature4-sticky-content', start: 1200, end: 1500 }
-            ];
-            
-            let currentActiveSection = null;
-            
-            function updateStickySections() {
-                const scrollPosition = window.scrollY;
-                const viewportHeight = window.innerHeight;
-                
-                sections.forEach(section => {
-                    const element = document.getElementById(section.id);
-                    const sectionStart = (section.start / 100) * viewportHeight;
-                    const sectionEnd = (section.end / 100) * viewportHeight;
-                    
-                    if (element) {
-                        if (scrollPosition >= sectionStart && scrollPosition < sectionEnd) {
-                            element.classList.add('active');
-                            currentActiveSection = section.id;
-                        } else {
-                            element.classList.remove('active');
-                        }
-                    }
-                });
-                
-                // Update indicators if the function exists
-                if (typeof window.updateIndicators === 'function') {
-                    window.updateIndicators();
-                }
-            }
-            
-            // Smooth scroll to sections
-            document.querySelectorAll('.indicator-dot').forEach((indicator, index) => {
-                indicator.addEventListener('click', () => {
-                    const targetScroll = (sections[index].start / 100) * window.innerHeight;
-                    window.scrollTo({
-                        top: targetScroll,
-                        behavior: 'smooth'
-                    });
-                });
-            });
-            
-            // Update on scroll
-            window.addEventListener('scroll', updateStickySections, { passive: true });
-            updateStickySections(); // Initial call
-            
-            // Also update on resize
-            window.addEventListener('resize', updateStickySections);
-            
-            console.log('Sticky sections initialized');
         }
 
     </script>

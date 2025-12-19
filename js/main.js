@@ -60,6 +60,7 @@ let isModelLoaded = false;
 let gltfLoader = null;
 let originalModelScale = 1;
 let currentModelScale = 1;
+let masterScrollTrigger = null;
 
 function init() {
     console.log('Initializing 3D viewer...');
@@ -349,8 +350,8 @@ function autoScaleModel(model) {
         max: maxDimension.toFixed(2)
     });
     
-    // EXACTLY 5% SCALE
-    const scaleFactor = 0.02; // 5% of original
+    // FIXED: Correct 5% scale (was 0.02 = 2%)
+    const scaleFactor = 0.05; // ACTUAL 5% of original
     
     console.log('Applying 5% scale factor:', scaleFactor);
     
@@ -441,6 +442,9 @@ function centerModel() {
     
     console.log('Centering model (balanced)...');
     
+    // FIXED: Update world matrix before calculating bounding box
+    model.updateMatrixWorld(true);
+    
     // Get bounding box
     const box = new THREE.Box3().setFromObject(model);
     const center = new THREE.Vector3();
@@ -519,23 +523,34 @@ function setupScrollAnimations() {
                     }
                 });
                 
+                // Update section indicators
+                const indicatorIndex = Math.floor(self.progress * 5);
+                const indicators = document.querySelectorAll('.indicator-dot');
+                indicators.forEach((indicator, index) => {
+                    if (index === indicatorIndex) {
+                        indicator.classList.add('active');
+                    } else {
+                        indicator.classList.remove('active');
+                    }
+                });
+                
                 // 3D model animation based on scroll
                 if (model) {
                     // Smooth rotation only - NO ZOOMING
                     model.rotation.y = self.progress * Math.PI * 2;
                     
-                    // Keep model at fixed scale (no zoom effect)
-                    // Remove any scaling logic
-                    
                     // Subtle floating movement
                     model.position.y = Math.sin(self.progress * Math.PI * 2) * 0.1;
                     
-                    // Ensure model scale stays fixed
+                    // Ensure model scale stays fixed at 5%
                     model.scale.set(initialModelScale, initialModelScale, initialModelScale);
                 }
             }
         }
     });
+    
+    // Store the scroll trigger globally for indicator clicks
+    masterScrollTrigger = masterTL.scrollTrigger;
     
     console.log('Sticky scroll animations ready');
 }
@@ -560,20 +575,21 @@ function quickBandingFixes() {
     // 4. Add subtle fog to hide distant banding
     scene.fog = new THREE.Fog(0x000000, 15, 30);
     
-    // 5. Add noise texture to all materials
+    // 5. FIXED: Better noise application
     if (model) {
         const noiseTexture = createNoiseTexture();
         model.traverse(child => {
             if (child.isMesh && child.material) {
-                if (Array.isArray(child.material)) {
-                    child.material.forEach(mat => {
-                        mat.alphaMap = noiseTexture;
-                        mat.alphaTest = 0.01;
-                    });
-                } else {
-                    child.material.alphaMap = noiseTexture;
-                    child.material.alphaTest = 0.01;
-                }
+                // Clone material to avoid affecting original
+                child.material = child.material.clone();
+                
+                // Add dithering to the material
+                child.material.dithering = true;
+                
+                // Instead of alphaMap, use emissive for subtle noise
+                child.material.emissive = new THREE.Color(0x000000);
+                child.material.emissiveMap = noiseTexture;
+                child.material.emissiveIntensity = 0.01;
             }
         });
     }
@@ -664,6 +680,23 @@ function showDemoNotice(message) {
                 demoNotice.style.display = 'none';
             }, 3000);
         }, 5000);
+    }
+}
+
+// Global function for indicator clicks
+function scrollToSection(sectionIndex) {
+    if (masterScrollTrigger) {
+        const progress = sectionIndex * 0.2; // 0, 0.2, 0.4, 0.6, 0.8
+        const main = document.querySelector('main');
+        const totalHeight = main.scrollHeight;
+        const viewportHeight = window.innerHeight;
+        const totalScroll = totalHeight - viewportHeight;
+        const targetScroll = progress * totalScroll;
+        
+        window.scrollTo({
+            top: targetScroll,
+            behavior: 'smooth'
+        });
     }
 }
 
