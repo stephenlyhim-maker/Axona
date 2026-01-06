@@ -40,35 +40,85 @@ body {
     transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Hero Section Background Effects */
+/* Hero Background Animation */
 .hero-section {
     position: relative;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
-#hero-background {
-    will-change: filter, transform;
+.hero-bg {
+    transform: scale(1);
+    filter: blur(0);
+    transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), 
+                filter 1.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-#hero-background.active {
-    filter: blur(2px) brightness(0.95);
+.hero-btn:hover ~ .hero-bg,
+.hero-btn:focus ~ .hero-bg,
+.hero-section:hover .hero-btn:focus ~ .hero-bg {
+    transform: scale(1.05);
+    filter: blur(2px);
+}
+
+.hero-btn:active ~ .hero-bg {
     transform: scale(1.03);
+    filter: blur(1px);
+    transition-duration: 0.3s;
 }
 
-/* Hero Button Styling */
-.hero-btn {
-    box-shadow: 0 4px 20px rgba(14, 165, 233, 0.3);
+/* Page Load Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.hero-btn:hover {
-    box-shadow: 0 6px 30px rgba(14, 165, 233, 0.4);
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
-/* Update text colors for better contrast on background */
-.text-white\/90 {
-    --tw-text-opacity: 1;
-    color: rgba(255, 255, 255, 0.9);
+.animate-fade-up {
+    opacity: 0;
+    animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in {
+    opacity: 0;
+    animation: fadeIn 1.2s ease-out forwards;
+}
+
+/* Delay classes for staggered animations */
+.delay-150 {
+    animation-delay: 150ms;
+}
+
+.delay-300 {
+    animation-delay: 300ms;
+}
+
+.delay-450 {
+    animation-delay: 450ms;
+}
+
+/* Hero background gradient overlay */
+.bg-hero-gradient::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+/* Smooth hover transition for hero content */
+.hero-content {
+    will-change: transform;
 }

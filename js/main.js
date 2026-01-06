@@ -21,6 +21,67 @@ allNavItems.forEach(item => {
     }
 });
 
+// --- Hero Section Background Animation ---
+document.addEventListener('DOMContentLoaded', function() {
+    const heroBtn = document.getElementById('hero-btn');
+    const heroBg = document.querySelector('.hero-bg');
+    const heroSection = document.querySelector('.hero-section');
+    
+    if (heroBtn && heroBg) {
+        // Hover effect
+        heroBtn.addEventListener('mouseenter', function() {
+            heroBg.style.transform = 'scale(1.05)';
+            heroBg.style.filter = 'blur(2px)';
+        });
+        
+        heroBtn.addEventListener('mouseleave', function() {
+            heroBg.style.transform = 'scale(1)';
+            heroBg.style.filter = 'blur(0)';
+        });
+        
+        // Click effect
+        heroBtn.addEventListener('mousedown', function() {
+            heroBg.style.transform = 'scale(1.03)';
+            heroBg.style.filter = 'blur(1px)';
+            heroBg.style.transitionDuration = '0.3s';
+        });
+        
+        heroBtn.addEventListener('mouseup', function() {
+            heroBg.style.transform = 'scale(1.05)';
+            heroBg.style.filter = 'blur(2px)';
+            heroBg.style.transitionDuration = '1.2s';
+        });
+        
+        // Touch events for mobile
+        heroBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            heroBg.style.transform = 'scale(1.03)';
+            heroBg.style.filter = 'blur(1px)';
+            heroBg.style.transitionDuration = '0.3s';
+        });
+        
+        heroBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            heroBg.style.transform = 'scale(1)';
+            heroBg.style.filter = 'blur(0)';
+            heroBg.style.transitionDuration = '1.2s';
+        });
+    }
+    
+    // Add fade-in animation to hero section on page load
+    if (heroSection) {
+        heroSection.classList.add('animate-fade-in');
+        
+        // Trigger animations after a small delay to ensure proper rendering
+        setTimeout(() => {
+            const animatedElements = heroSection.querySelectorAll('.animate-fade-up');
+            animatedElements.forEach(el => {
+                el.style.animationPlayState = 'running';
+            });
+        }, 100);
+    }
+});
+
 // --- SCROLL ANIMATIONS (Intersection Observer) ---
 // This watches for elements with 'animate-on-scroll' entering the viewport
 
@@ -846,60 +907,3 @@ function debugModelSize() {
 // Call debug function on load for troubleshooting
 setTimeout(debugModelSize, 2000);
 
-// --- Hero Section Background Effects ---
-const learnMoreBtn = document.getElementById('learn-more-btn');
-const heroBackground = document.getElementById('hero-background');
-
-if (learnMoreBtn && heroBackground) {
-    // Mouseenter (hover) effect
-    learnMoreBtn.addEventListener('mouseenter', () => {
-        heroBackground.classList.add('active');
-    });
-    
-    // Mouseleave (unhover) effect
-    learnMoreBtn.addEventListener('mouseleave', () => {
-        heroBackground.classList.remove('active');
-    });
-    
-    // Mousedown (click) effect - more intense
-    learnMoreBtn.addEventListener('mousedown', () => {
-        heroBackground.classList.add('active');
-        // Add additional intensity on click
-        heroBackground.style.filter = 'blur(3px) brightness(0.9)';
-        heroBackground.style.transform = 'scale(1.05)';
-    });
-    
-    // Mouseup (release) effect
-    learnMoreBtn.addEventListener('mouseup', () => {
-        heroBackground.style.filter = 'blur(2px) brightness(0.95)';
-        heroBackground.style.transform = 'scale(1.03)';
-    });
-    
-    // Handle touch devices
-    learnMoreBtn.addEventListener('touchstart', () => {
-        heroBackground.classList.add('active');
-        heroBackground.style.filter = 'blur(3px) brightness(0.9)';
-        heroBackground.style.transform = 'scale(1.05)';
-    });
-    
-    learnMoreBtn.addEventListener('touchend', () => {
-        setTimeout(() => {
-            heroBackground.classList.remove('active');
-            heroBackground.style.filter = '';
-            heroBackground.style.transform = '';
-        }, 300);
-    });
-}
-
-// Ensure background image loads properly
-window.addEventListener('load', () => {
-    const bg = document.getElementById('hero-background');
-    if (bg) {
-        // Force background image loading
-        const img = new Image();
-        img.src = bg.style.backgroundImage.replace('url(', '').replace(')', '').replace(/\"/gi, '');
-        img.onload = () => {
-            console.log('Hero background image loaded successfully');
-        };
-    }
-});
