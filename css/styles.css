@@ -39,3 +39,36 @@ body {
     transform: scale(1.03); /* Made slightly subtler for a premium feel */
     transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* Hero Section Background Effects */
+.hero-section {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#hero-background {
+    will-change: filter, transform;
+}
+
+#hero-background.active {
+    filter: blur(2px) brightness(0.95);
+    transform: scale(1.03);
+}
+
+/* Hero Button Styling */
+.hero-btn {
+    box-shadow: 0 4px 20px rgba(14, 165, 233, 0.3);
+}
+
+.hero-btn:hover {
+    box-shadow: 0 6px 30px rgba(14, 165, 233, 0.4);
+}
+
+/* Update text colors for better contrast on background */
+.text-white\/90 {
+    --tw-text-opacity: 1;
+    color: rgba(255, 255, 255, 0.9);
+}

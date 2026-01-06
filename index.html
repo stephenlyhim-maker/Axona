@@ -56,19 +56,30 @@
     </header>
 
     <main>
-        <div class="relative text-center px-4 py-32 sm:py-48 lg:py-56">
-            <h1 class="animate-on-scroll text-5xl sm:text-7xl font-bold tracking-tight text-gray-900">
-                A new era of relief.
-            </h1>
-            <p class="animate-on-scroll delay-100 mt-6 text-xl sm:text-2xl max-w-3xl mx-auto text-gray-600">
-                Discover AxonaPulse, our revolutionary IR and electroimpulse neckwear designed for your wellness.
-            </p>
-            <div class="animate-on-scroll delay-200 mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <a href="product-detail.html" class="w-full sm:w-auto inline-block bg-brand-600 text-white px-8 py-3 rounded-full text-lg font-medium hover:bg-brand-700 transition-colors">
-                    Learn More
-                </a>
+        <!-- Updated Hero Section with background image -->
+        <div class="hero-section relative text-center px-4 py-32 sm:py-48 lg:py-56 overflow-hidden">
+            <!-- Background Image Container -->
+            <div id="hero-background" class="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-all duration-700" style="background-image: url('cover.png');">
+                <!-- Optional overlay for better text readability -->
+                <div class="absolute inset-0 bg-black/20"></div>
+            </div>
+            
+            <!-- Content -->
+            <div class="relative z-10">
+                <h1 class="animate-on-scroll text-5xl sm:text-7xl font-bold tracking-tight text-white">
+                    A new era of relief.
+                </h1>
+                <p class="animate-on-scroll delay-100 mt-6 text-xl sm:text-2xl max-w-3xl mx-auto text-white/90">
+                    Discover AxonaPulse, our revolutionary IR and electroimpulse neckwear designed for your wellness.
+                </p>
+                <div class="animate-on-scroll delay-200 mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <a href="product-detail.html" id="learn-more-btn" class="hero-btn w-full sm:w-auto inline-block bg-white text-brand-600 px-8 py-3 rounded-full text-lg font-medium hover:bg-brand-50 hover:scale-105 active:scale-95 transition-all duration-300">
+                        Learn More
+                    </a>
+                </div>
             </div>
         </div>
+        <!-- Rest of the content remains the same... -->
         
         <div class="bg-gray-50 py-24 sm:py-32">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
