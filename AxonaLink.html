@@ -758,6 +758,63 @@
             scroll-behavior: smooth;
         }
 
+        /* Add this to your existing CSS in AxonaLink.html */
+
+        /* Ensure feature content is properly positioned */
+        #hero-sticky-content .feature-content {
+            margin-left: auto;
+            margin-right: 0;
+        }
+
+        #feature1-sticky-content .feature-content {
+            margin-left: 0;
+            margin-right: auto;
+        }
+
+        #feature2-sticky-content .feature-content {
+            margin-left: auto;
+            margin-right: 0;
+        }
+
+        #feature3-sticky-content .feature-content {
+            margin-left: 0;
+            margin-right: auto;
+        }
+
+        #feature4-sticky-content .feature-content {
+            margin-left: auto;
+            margin-right: 0;
+        }
+
+        /* Make sure sticky content has proper width */
+        .sticky-content {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 5%;
+            display: flex;
+        }
+
+        /* Position the feature content inside sticky-content */
+        #hero-sticky-content {
+            justify-content: flex-start;
+        }
+
+        #feature1-sticky-content {
+            justify-content: flex-end;
+        }
+
+        #feature2-sticky-content {
+            justify-content: flex-start;
+        }
+
+        #feature3-sticky-content {
+            justify-content: flex-end;
+        }
+
+        #feature4-sticky-content {
+            justify-content: flex-start;
+        }
     </style>
 </head>
 <body class="text-gray-900">
@@ -1286,7 +1343,68 @@
             
             // Setup scroll animations
             setupScrollAnimations();
+            
+            // Initialize all sticky content to show properly
+            initializeStickySections();
         });
+
+        function initializeStickySections() {
+            // Initially show hero section content
+            document.getElementById('hero-sticky-content').classList.add('active');
+            
+            // Setup intersection observer for sticky sections
+            const sections = [
+                'hero-sticky-section',
+                'feature1-sticky-section',
+                'feature2-sticky-section',
+                'feature3-sticky-section',
+                'feature4-sticky-section'
+            ];
+            
+            const sectionContents = [
+                'hero-sticky-content',
+                'feature1-sticky-content',
+                'feature2-sticky-content',
+                'feature3-sticky-content',
+                'feature4-sticky-content'
+            ];
+            
+            // Set up an observer to detect when sections are in view
+            const observer = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach(entry => {
+                        // Find which section this is
+                        const sectionId = entry.target.id;
+                        const index = sections.indexOf(sectionId);
+                        
+                        if (index !== -1) {
+                            const contentId = sectionContents[index];
+                            const contentElement = document.getElementById(contentId);
+                            
+                            if (entry.isIntersecting) {
+                                // Section is in view
+                                contentElement.classList.add('active');
+                                // Update indicators
+                                updateActiveSection(index);
+                            } else {
+                                // Section is out of view
+                                contentElement.classList.remove('active');
+                            }
+                        }
+                    });
+                },
+                {
+                    threshold: 0.5, // Trigger when 50% of section is visible
+                    rootMargin: '-10% 0px -10% 0px' // Adjust trigger boundaries
+                }
+            );
+            
+            // Observe all sections
+            sections.forEach(sectionId => {
+                const section = document.getElementById(sectionId);
+                if (section) observer.observe(section);
+            });
+        }
 
         function setupScrollHint() {
             const scrollHint = document.getElementById('scroll-hint');
@@ -1386,16 +1504,13 @@
                     const section = document.getElementById(sectionId);
                     if (section) {
                         const sectionRect = section.getBoundingClientRect();
-                        const targetScroll = window.scrollY + sectionRect.top - (window.innerHeight / 3);
+                        const targetScroll = window.scrollY + sectionRect.top;
                         
                         window.scrollTo({
                             top: Math.max(0, targetScroll),
                             behavior: 'smooth'
                         });
                     }
-                    
-                    // Update active states
-                    updateActiveSection(index);
                     
                     // Show header briefly
                     const header = document.getElementById('main-header');
@@ -1411,28 +1526,7 @@
                 });
             });
 
-            // Setup scroll-based updates
-            window.addEventListener('scroll', updateOnScroll, { passive: true });
-            
             console.log('Section indicators initialized');
-        }
-
-        function updateOnScroll() {
-            const scrollPosition = window.scrollY;
-            const windowHeight = window.innerHeight;
-            const totalHeight = document.body.scrollHeight;
-            
-            // Calculate which section is currently in view
-            const sectionHeights = windowHeight * 5; // 5 sections * 100vh each
-            
-            // Determine active section based on scroll position
-            let activeSection = 0;
-            if (scrollPosition > windowHeight * 1) activeSection = 1;
-            if (scrollPosition > windowHeight * 2) activeSection = 2;
-            if (scrollPosition > windowHeight * 3) activeSection = 3;
-            if (scrollPosition > windowHeight * 4) activeSection = 4;
-            
-            updateActiveSection(activeSection);
         }
 
         function updateActiveSection(activeIndex) {
@@ -1443,26 +1537,6 @@
                     indicator.classList.add('active');
                 } else {
                     indicator.classList.remove('active');
-                }
-            });
-            
-            // Update sticky content visibility
-            const sections = [
-                'hero-sticky-content',
-                'feature1-sticky-content', 
-                'feature2-sticky-content',
-                'feature3-sticky-content',
-                'feature4-sticky-content'
-            ];
-            
-            sections.forEach((sectionId, index) => {
-                const section = document.getElementById(sectionId);
-                if (section) {
-                    if (index === activeIndex) {
-                        section.classList.add('active');
-                    } else {
-                        section.classList.remove('active');
-                    }
                 }
             });
             
@@ -1508,13 +1582,40 @@
         }
 
         function setupScrollAnimations() {
-            // Setup scroll listener for updates
-            window.addEventListener('scroll', updateOnScroll, { passive: true });
-            
-            // Initialize with hero section
-            updateActiveSection(0);
+            // Simple scroll-based section detection
+            window.addEventListener('scroll', function() {
+                const sections = [
+                    'hero-sticky-section',
+                    'feature1-sticky-section',
+                    'feature2-sticky-section',
+                    'feature3-sticky-section',
+                    'feature4-sticky-section'
+                ];
+                
+                const windowHeight = window.innerHeight;
+                const scrollPosition = window.scrollY;
+                
+                // Determine which section is most in view
+                let activeIndex = 0;
+                let maxVisible = 0;
+                
+                sections.forEach((sectionId, index) => {
+                    const section = document.getElementById(sectionId);
+                    if (section) {
+                        const rect = section.getBoundingClientRect();
+                        const visibleHeight = Math.min(rect.bottom, windowHeight) - Math.max(rect.top, 0);
+                        
+                        if (visibleHeight > maxVisible) {
+                            maxVisible = visibleHeight;
+                            activeIndex = index;
+                        }
+                    }
+                });
+                
+                updateActiveSection(activeIndex);
+            }, { passive: true });
         }
 
     </script>
-</body>
+    </body>
 </html>
